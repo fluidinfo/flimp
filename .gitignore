@@ -1,0 +1,5 @@
+*.pyc
+build/*
+docs/.build
+docs/.static
+docs/.templates
