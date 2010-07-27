@@ -1,4 +1,5 @@
 *.pyc
+*.log
 build/*
 docs/.build
 docs/.static

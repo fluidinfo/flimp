@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 import logging
 import sys
+import os
 from optparse import OptionParser
 if sys.version_info < (2, 6):
     import simplejson as json
@@ -36,10 +37,16 @@ else:
 from fom.errors import Fluid412Error
 from fom.session import Fluid
 from fom.mapping import Namespace, Tag, Object, tag_value
-from parser import parse_json, parse_yaml, parse_csv
+from flimp.parser import parse_json, parse_yaml, parse_csv
 
 NAMESPACE_DESC = "%s namespace derived from %s.\n\n%s"
 TAG_DESC = "%s tag derived from %s.\n\n%s"
+
+VALID_FILETYPES = {
+    'json': parse_json,
+    'csv': parse_csv,
+    'yaml': parse_yaml
+}
 
 LOG_FILENAME = 'flimp.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG,
@@ -51,14 +58,15 @@ def clean_data(filename):
     turn it into a dictionary object for further processing
     """
     extension = filename.split('.')[-1:][0]
-    if not extension in ('json', ):
+    if not extension in VALID_FILETYPES.keys():
         raise TypeError('Unknown file type to parse')
 
     f = open(filename, 'r')
 
-    if extension == 'json':
-        logging.info('Parsing json')
-        return parse_json.parse(f)
+    logging.info('Parsing %s' % extension)
+    result = VALID_FILETYPES[extension].parse(f)
+    f.close()
+    return result
 
 def create_schema(raw_data, username, name, desc):
     """
@@ -87,11 +95,15 @@ def generate(parent, child_name, template, description, name, tags):
     """
     try:
         # Create the child namespace
+        logging.info('Creating new namespace "%s" under %s' % (child_name,
+                                                               parent.path))
         ns = parent.create_namespace(child_name,
                                  NAMESPACE_DESC % (child_name, name, description))
+        logging.info('Done.')
     except Fluid412Error:
         # 412 simply means the namespace already exists
         ns = Namespace(parent.path + '/' + child_name)
+        logging.info('(%s already existed)' % ns.path)
 
     for key, value in template.iteritems():
         # lets see what's in here
@@ -103,10 +115,14 @@ def generate(parent, child_name, template, description, name, tags):
             try:
                 # it must be a tag so create the tag within the current
                 # namespace
-                tag = ns.create_tag(key, TAG_DESC % (key, name, description), False)
+                logging.info('Creating new tag "%s" under %s' % (key,
+                                                                 ns.path))
+                tag = ns.create_tag(key, TAG_DESC % (key, name, description),
+                                    False)
             except Fluid412Error:
                 # 412 simply means the namespace already exists
                 tag = Tag(parent.path + '/' + child_name + '/' + key)
+                logging.info('(%s already existed)' % tag.path)
             # Create the tag_value instance...
             # Lets make sure we specify the right sort of mime
             defaultType = None
@@ -124,37 +140,55 @@ def create_class(tags):
     """
     return type('fom_class', (Object, ), tags)
 
-"""
-def annotate(item, fom_class, about, name, base_namespace):
-    about_val, tag_values = get_values(item, about, name, base_namespace)
-    obj = fom_class(about=about_val)
-    for key, value in tag_values.iteritems():
-        if (key in fom_class.__dict__.keys()):
-            if value:
-                setattr(obj, key, value)
-        else:
-            raise ValueError('No such attribute %s' % key)
-    print obj.uid
-    print obj.about
+def push_to_fluiddb(raw_data, klass, about, name, username):
+    """
+    Given the raw data and a class derived from FOM's Object class will import
+    the data into FluidDB. Each item in the list mapping to a new object in
+    FluidDB. The 'about' and 'name' arguments are used to automate the
+    generation of the about tag and associated value. The 'name' and
+    'username' arguments are used to build the root path
+    """
+    length = len(raw_data)
+    counter = 1
+    for item in raw_data:
+        logging.info("Processing record %d of %d" % (counter, length))
+        counter += 1
+        # create the object
+        about_value = "%s:%s" % (name, item[about])
+        logging.info('Creating new object with about tag value: %s' %
+                     about_value)
+        obj = klass(about=about_value)
+        logging.info('Object %s successfully created' % obj.uid)
+        # annotate it
+        tag_values = get_values(item, build_attribute_name([username, name,]))
+        for key, value in tag_values.iteritems():
+            if (key in klass.__dict__.keys()):
+                if value:
+                    setattr(obj, key, value)
+                    logging.info('Set: %s to: %s' % (key, value))
+            else:
+                logging.error('Unable to set %s (unknown attribute)' % key)
+        logging.info('Finished annotating Object about %s' % about_value)
 
-def get_values(item, about, name, parent):
-    about_val = ''
+def get_values(item, parent):
+    """
+    Given a dictionary that represents data to import into FluidDB this method
+    (recursively) builds a dict where the key is the attribute name on the
+    Object class and the value is the value to import into FluidDB.
+    """
     vals = {}
     for key, value in item.iteritems():
-        if key == about:
-            about_val = '%s:%s' % (name, value)
         if isinstance(value, dict):
-            a, v = get_values(value, about, name, build_path([parent, key]))
-            if a and not about_val:
-                about_val = a
-            vals.update(v)
+            vals.update(get_values(value, build_attribute_name([parent, key])))
         else:
-            vals[build_path([parent, key])] = value
-    return about_val, vals
+            vals[build_attribute_name([parent, key])] = value
+    return vals
 
-def build_path(items):
+def build_attribute_name(items):
+    """
+    Turns a list into a something that will be a "valid" attribute name
+    """
     return '_'.join([item for item in items if item])
-"""
 
 def execute():
     """
@@ -166,7 +200,8 @@ def execute():
     instance = 'https://fluiddb.fluidinfo.com'
     parser = OptionParser()
     parser.add_option('-f', '--file', dest='filename',
-                      help='The json FILE to process', metavar="FILE")
+                      help='The FILE to process (valid filetypes: %s)' %
+                      ', '.join(VALID_FILETYPES.keys()), metavar="FILE")
     parser.add_option('-i', '--instance', dest='instance',
                       help="The URI for the instance of FluidDB to use")
     options, args = parser.parse_args()
@@ -182,7 +217,7 @@ def execute():
     username = get_argument('FluidDB username')
     password = get_argument('FluidDB password')
     name = get_argument('Name of dataset (defaults to filename)',
-                        parser.filename)
+                        os.path.basename(options.filename).split('.')[0])
     desc = get_argument('Description of the dataset')
     about = get_argument('Key field for about tag value (defaults to "id")',
                          'id')
@@ -190,6 +225,7 @@ def execute():
     logging.info('Dataset name: %s' % name)
     logging.info('Dataset description: %s' % desc)
     logging.info('About tag field key: %s' % about)
+    print "Working... (this might take some time, why not: tail -f flimp.log)"
 
     # Log into FluidDB
     fdb = Fluid(instance)
@@ -202,14 +238,21 @@ def execute():
     logging.info('%d records found' % len(raw_data))
 
     # Use the first item in the list of items 
-    tag_list = create_schema(raw_data, name, desc)
+    logging.info('Creating namespace/tag schema in FluidDB')
+    tag_dict = create_schema(raw_data, username, name, desc)
+    logging.info('Created %d new tag[s]' % len(tag_dict))
+    logging.info(tag_dict.keys())
 
     # Create a FOM class that inherits from Object to use to interract with
     # FluidDB
-    fom_class = create_class(tag_list)
+    logging.info('Creating new FOM Object class')
+    fom_class = create_class(tag_dict)
+    logging.info(dir(fom_class))
 
     # Given the newly existing class push all the data to FluidDB
-    push_to_fluiddb(raw_data, fom_class, about)
+    logging.info('Starting to push records to FluidDB')
+    push_to_fluiddb(raw_data, fom_class, about, name, username)
+    logging.info('FINISHED!')
 
 def get_argument(description, default_value=None, required=True):
     """
@@ -222,8 +265,8 @@ def get_argument(description, default_value=None, required=True):
     else:
         desc = description
     val = default_value
-    if required:
-        user_val
+    if required and not default_value:
+        user_val = None
         while not user_val:
             user_val = raw_input("%s: " % desc)
             if not user_val:
@@ -231,4 +274,6 @@ def get_argument(description, default_value=None, required=True):
         val = user_val
     else:
         val = raw_input("%s: " % desc)
+    if default_value and not val:
+        val = default_value
     return val
