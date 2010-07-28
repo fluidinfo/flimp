@@ -89,12 +89,17 @@ class TestImporter(unittest.TestCase):
         # check an object was created
         result = Object.filter("has test/%s/foo" % name)
         self.assertEqual(1, len(result))
-        # check we have all the expected tags on the object
-        obj = result[0]
-        tag_paths = obj.tag_paths
-        for k in tags.keys():
-            tag_name = k.replace('_', '/')
-            self.assertTrue(tag_name in tag_paths)
+        # lets try the other good case where we don't have an about tag field
+        push_to_fluiddb(TEMPLATE, fom_class, None, name, 'test')
+        # we should have *two* objects now
+        result = Object.filter("has test/%s/foo" % name)
+        self.assertEqual(2, len(result))
+        # check we have all the expected tags on the objects
+        for obj in result:
+            tag_paths = obj.tag_paths
+            for k in tags.keys():
+                tag_name = k.replace('_', '/')
+                self.assertTrue(tag_name in tag_paths)
 
     def test_get_values(self):
         item = TEMPLATE[0]

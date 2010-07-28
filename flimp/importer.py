@@ -30,6 +30,7 @@ import logging
 import sys
 import os
 from optparse import OptionParser
+from getpass import getpass
 if sys.version_info < (2, 6):
     import simplejson as json
 else:
@@ -154,10 +155,15 @@ def push_to_fluiddb(raw_data, klass, about, name, username):
         logging.info("Processing record %d of %d" % (counter, length))
         counter += 1
         # create the object
-        about_value = "%s:%s" % (name, item[about])
-        logging.info('Creating new object with about tag value: %s' %
+        if about:
+            about_value = "%s:%s" % (name, item[about])
+            logging.info('Creating new object with about tag value: %s' %
                      about_value)
-        obj = klass(about=about_value)
+            obj = klass(about=about_value)
+        else:
+            logging.info('Creating a new anonymous object')
+            obj = klass()
+            obj.create()
         logging.info('Object %s successfully created' % obj.uid)
         # annotate it
         tag_values = get_values(item, build_attribute_name([username, name,]))
@@ -168,7 +174,12 @@ def push_to_fluiddb(raw_data, klass, about, name, username):
                     logging.info('Set: %s to: %s' % (key, value))
             else:
                 logging.error('Unable to set %s (unknown attribute)' % key)
-        logging.info('Finished annotating Object about %s' % about_value)
+        if about:
+            logging.info('Finished annotating Object about "%s" with id: %s' %
+                         (about_value, obj.uid))
+        else:
+            logging.info('Finished annotating anonymous Object with id: %s' %
+                         obj.uid)
 
 def get_values(item, parent):
     """
@@ -215,12 +226,12 @@ def execute():
     # In the same way that sphinx interrogates the user using q&a we need to
     # assemble some more data that is probably not so easy to 
     username = get_argument('FluidDB username')
-    password = get_argument('FluidDB password')
+    password = get_argument('FluidDB password', password=True)
     name = get_argument('Name of dataset (defaults to filename)',
                         os.path.basename(options.filename).split('.')[0])
     desc = get_argument('Description of the dataset')
-    about = get_argument('Key field for about tag value (defaults to "id")',
-                         'id')
+    about = get_argument('Key field for about tag value (if none given, will'\
+                         ' use anonymous objects)', required=False)
     logging.info('Username: %s' % username)
     logging.info('Dataset name: %s' % name)
     logging.info('Dataset description: %s' % desc)
@@ -254,7 +265,8 @@ def execute():
     push_to_fluiddb(raw_data, fom_class, about, name, username)
     logging.info('FINISHED!')
 
-def get_argument(description, default_value=None, required=True):
+def get_argument(description, default_value=None, required=True,
+                 password=False):
     """
     Will return a string value obtained from the user given the description
     and other stuff so that arguments for importing data into FluidDB can be
@@ -268,12 +280,18 @@ def get_argument(description, default_value=None, required=True):
     if required and not default_value:
         user_val = None
         while not user_val:
-            user_val = raw_input("%s: " % desc)
+            if password:
+                user_val = getpass("%s: " % desc)
+            else:
+                user_val = raw_input("%s: " % desc)
             if not user_val:
                 print "This field is required!"
         val = user_val
     else:
-        val = raw_input("%s: " % desc)
+        if password:
+            val = getpass("%s: " % desc)
+        else:
+            val = raw_input("%s: " % desc)
     if default_value and not val:
         val = default_value
     return val

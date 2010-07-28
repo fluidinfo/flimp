@@ -1,0 +1,4 @@
+* Add a preview function te enable users to check the namespace/tag schema
+has been generated correctly.
+* Create a plugin system so third-parties can write their own parsers for
+different file formats.
