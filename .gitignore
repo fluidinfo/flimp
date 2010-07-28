@@ -1,5 +1,7 @@
 *.pyc
 *.log
+MANIFEST
+dist/*
 build/*
 docs/.build
 docs/.static
