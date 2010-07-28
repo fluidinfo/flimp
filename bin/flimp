@@ -2,4 +2,7 @@
 from flimp.importer import execute
 
 if __name__ == '__main__':
-    execute()
+    try:
+        execute()
+    except Exception, ex:
+        print "Oops! Something went wrong:\n\n%s\n\nCheck the flimp.log file!" % ex
