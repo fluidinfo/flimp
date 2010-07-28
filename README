@@ -1,5 +1,5 @@
 This package provides a script that will attempt to automate the importing of
-data into FluidDB if the original data is in the json, csv and yaml formats.
+data into FluidDB if the original data is in the json, csv or yaml formats.
 
 It assumes the following:
 
