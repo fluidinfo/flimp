@@ -4,7 +4,7 @@ Processing CSV files with flimp
 How it works
 ------------
 
-The flimp utility expects that the first line will be a list of column
+Flimp expects that the first line will be a list of column
 headers. It attempts to detect these headers and uses them as the basis for 
 creating the tags used to annotate the objects within FluidDB. It also
 attempts to make a good guess at the dialect used to format the CSV file.
@@ -25,7 +25,7 @@ Consider the following CSV file::
   'qux', 'quux', 'corge',
   1, 2, 3
 
-Internally, flimp will translate it into something like the following::
+Internally, flimp translates it into::
 
   [
     {
@@ -45,7 +45,7 @@ Internally, flimp will translate it into something like the following::
     }
   ]
 
-Notice how the records are turned into dictionary like representations that
+The records are turned into dictionary that
 will be used to generate the objects and associated tags (whitespace is
 translated to underscores so the tag names will, in fact, be something like
 ``header_1``).
@@ -53,7 +53,7 @@ translated to underscores so the tag names will, in fact, be something like
 Bad
 +++
 
-Here are some examples (and explanations thereof) of what won't work.
+Here are some examples of what won't work.
 
 The following won't work because there are *no headers*::
 

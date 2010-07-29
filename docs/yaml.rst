@@ -4,7 +4,7 @@ Processing YAML files with flimp
 How it works
 ------------
 
-In the case of yaml, flimp is expecting a list of dictionary objects to parse
+In the case of yaml, flimp expects a list of dictionary objects to turn
 into objects in FluidDB.
 
 Examples
@@ -35,25 +35,25 @@ Consider the following yaml snippet::
     real ale: true
 
 
-If I gave this dataset the name "pubs" and indicated that the "id" field was
-unique and to be used as the basis of the about tag value and that my username
+If I gave this dataset the name "pubs", indicated that the "id" field was
+unique and to be used as the basis of the about tag and that my username
 was "ntoll" then we'd end up with the following namespaces/tags::
 
+  ntoll/pubs/cuisine
   ntoll/pubs/food
   ntoll/pubs/location/long
   ntoll/pubs/location/lat
   ntoll/pubs/real_ale
   ntoll/pubs/id
   ntoll/pubs/description
-  ntoll/pubs/cuisine
 
-Notice how the nested dictionary is translated into a new namespace. In
-addition, if flimp encounters a nested list that contains values other than
-strings then it will simply store the nested list as an application/json type
+Notice how the nested dictionary is translated into a new namespace.
+If flimp encounters a nested list that contains values other than just
+strings then it will attempt store the nested list as an application/json type
 value within FluidDB (note *not* as application/yaml).
 
-The about tag values would be the name of the dataset followed by a colon then
-the unique value. So the about tag value for the first item in the example
+About tag values are the name of the dataset followed by a colon then
+the unique value. For instance, the about tag value for the first item in the example
 above would be::
 
   pubs:1

@@ -14,10 +14,10 @@ and that each record is the same length as the headers. This will result in a
 list of python dict objects that will form the basis of the import.
 
 Once the list of items has been abstracted into a list of Python dicts the
-script will use the first item as a "template" and will create the appropriate
+script will use the first item as a "template" and create the appropriate
 namespaces and tags to correspond to the keys in the dictionary.
 
-Once this step is complete the script simply iterates over the items and
+Once this step is complete the script simply iterates over the items,
 creates an object for each and tags it with the corresponding tag-values.
 
 Example usage::

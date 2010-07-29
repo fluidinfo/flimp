@@ -1,23 +1,13 @@
 Welcome to flimp's documentation!
 =================================
 
-Contents
---------
-
-.. toctree::
-   :maxdepth: 2
-
-   json
-   csv
-   yaml
-
 What is flimp?
 --------------
 
 The FLuiddb IMPorter (flimp) is a utility to help make it simple to import
 data into FluidDB.
 
-Given a source file (currently flimp handles json, csv and yaml file types) it
+Given a source file (currently flimp handles json, csv or yaml file types) it
 will create the necessary namespaces and tags and then import the records.
 
 It assumes the following:
@@ -47,32 +37,42 @@ The ``-i`` (instance) argument is optional and will default to
 ``https://fluiddb.fluidinfo.com``. Obviously, the ``-f`` option is used to
 indicate the source file.
 
-As shown above, you are asked for some basic information and the utility runs
+As shown above, flimp asks for some basic information and then runs
 its course.
 
-The ``Key field for about tag value`` question is important because this
-allows you to identify a field in each record that contains a unique value
-within the dataset that can be used as the basis of the about tag value. If no
-value is given then flimp will create so-called anonymous objects without an
-associated about tag value. It is important to note that flimp *does not
+The *"Key field for about tag value"* question allows you to identify a field
+in each record that contains a unique value within the dataset. These values
+will be used as the basis of the about tag value. If no
+value is given then flimp creates so-called anonymous objects without 
+associated about tags. It is important to note that flimp *does not
 check* that the field and associated values are unique. It assumes you know
 what you're doing (you have been warned).
 
-The new namespaces and tags will be created under the root namespace of the
-user whose credentials you supplied. Flimp will create a namespace with the
-same name as the dataset ("my_dataset" in the example usage above) and
-generate all the other namespaces and tags underneath this.
+New namespaces and tags are created under the root namespace of the
+user whose credentials you supplied. Flimp creates a namespace with the
+same name as the dataset ("my_dataset" in the example above) and
+generates all the other namespaces and tags underneath this.
 
-You can find a log of what it's doing in the ``flimp.log`` file found in the
-current directory.
+Flimp keeps a log of what it's doing in the ``flimp.log`` file found in your
+current working directory.
 
 For more information about how each of the file types are processed, along
-with examples, please see the file type's page within this documentation.
+with examples, please see the pages linked below.
+
+How flimp parses
+----------------
+
+.. toctree::
+   :maxdepth: 3
+
+   json
+   csv
+   yaml
 
 Project Information
 -------------------
 
-To find out more about FluidDB please visit `Fluidinfo's website 
+To find out more about FluidDB visit `Fluidinfo's website 
 <http://fluidinfo.com>`_.
 
 This utility is hosted on `GitHub <http://github.com/fluidinfo/flimp>`_.
