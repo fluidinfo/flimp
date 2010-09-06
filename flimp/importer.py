@@ -31,6 +31,7 @@ from getpass import getpass
 from file_handler import VALID_FILETYPES, process as process_file
 from directory_handler import process as process_directory
 from fom.session import Fluid
+from fom.mapping import Object
 import flimp
 
 def execute():
@@ -45,6 +46,12 @@ def execute():
     parser.add_option('-d', '--dir', dest='directory',
                       help="The root directory for a filesystem import into"\
                       " FluidDB")
+    parser.add_option('-u', '--uuid', dest="uuid", default="",
+                      help="The uuid of the object to which the filesystem"\
+                      " import is to attach its tags")
+    parser.add_option('-a', '--about', dest="about", default="",
+                      help="The about value of the object to which the"\
+                      " filesystem import is to attach its tags")
     parser.add_option('-p', '--preview', action="store_true", dest="preview",
                       help="Show a preview of what will happen, don't import"\
                       " anything", default=False)
@@ -65,11 +72,13 @@ def execute():
     if options.filename and options.directory:
         parser.error("You may only supply either a source file OR root"\
                      " directory to import (not both).")
+    if options.uuid and options.about:
+        parser.error("You may only supply either an object's uuid OR its"\
+                     " about tag value (not both).")
 
     # Setup logging properly
     logger = logging.getLogger("flimp")
     logger.setLevel(logging.DEBUG)
-    # set the log file
     logfile_handler = logging.FileHandler(options.log)
     logfile_handler.setLevel(logging.DEBUG)
     log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -95,36 +104,34 @@ def execute():
                              ' will use anonymous objects)', required=False)
     else:
         name = get_argument('Name of dataset')
-        about = get_argument('The about value for the resulting object (if'\
-                             ' none given, will use an anonymous object)',
-                             required=False)
     desc = get_argument('Description of the dataset')
 
-    # Dump the recently collected useful information
+    # Dump the recently collected information into the log file
     logger.info('FluidDB instance: %s' % options.instance)
     logger.info('Username: %s' % username)
     logger.info('Dataset name: %s' % name)
     logger.info('Dataset description: %s' % desc)
-    if options.filename:
-        logger.info('Raw filename: %s' % options.filename)
-        logger.info('About tag field key: %s' % about)
-    else:
-        logger.info('Root directory: %s' % options.directory)
-        logger.info('About tag value: %s' % about)
 
     # Log into FluidDB
     fdb = Fluid(options.instance)
     fdb.bind()
     fdb.login(username, password)
 
-    # split on file or directory
-    if options.filename:
-        process_file(options.filename, username, name, desc, about,
-                            options.preview)
-    else:
-        process_directory(options.directory, username, name, desc,
-                            about, options.preview)
-    logger.info('FINISHED!')
+    # Process the file or directory
+    try:
+        if options.filename:
+            process_file(options.filename, username, name, desc, about,
+                                options.preview)
+        else:
+            process_directory(options.directory, username, name, desc,
+                              options.uuid, options.about, options.preview)
+    except Exception, e:
+        # We want to catch all exceptions so we can log them nicely
+        logger.critical(e)
+        # this will be handled by nicely by the try of last resort in the
+        # flimp command line tool
+        raise e
+    logger.info('FINISHED!') # :-)
 
 def get_argument(description, default_value=None, required=True,
                  password=False):

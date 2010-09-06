@@ -9,3 +9,6 @@ h = NullHandler()
 logging.getLogger("flimp").addHandler(h)
 
 VERSION = "0.1.0"
+
+NAMESPACE_DESC = "%s namespace derived from %s.\n\n%s"
+TAG_DESC = "%s tag derived from %s.\n\n%s"

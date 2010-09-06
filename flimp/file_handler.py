@@ -33,9 +33,7 @@ else:
 from fom.errors import Fluid412Error
 from fom.mapping import Namespace, Tag, Object, tag_value
 from flimp.parser import parse_json, parse_yaml, parse_csv
-
-NAMESPACE_DESC = "%s namespace derived from %s.\n\n%s"
-TAG_DESC = "%s tag derived from %s.\n\n%s"
+from flimp import NAMESPACE_DESC, TAG_DESC
 
 VALID_FILETYPES = {
     'json': parse_json,
@@ -52,6 +50,8 @@ def process(filename, username, name, desc, about, preview):
     # Turn the raw input file into a list data structure containing the items
     # to import into FluidDB
     raw_data = clean_data(filename)
+    logger.info('Raw filename: %s' % filename)
+    logger.info('About tag field key: %s' % about)
     logger.info('%d records found' % len(raw_data))
 
     if preview:
@@ -104,7 +104,7 @@ def traverse_preview(template, parent, tags):
             traverse_preview(value, '/'.join([parent, key]), tags)
         else:
             # Yay! it's a tag!
-            logger.append('Found tag: %s' % key)
+            logger.info('Found tag: %s' % key)
             tags.append('/'.join([parent, key]))
 
 def clean_data(filename):
