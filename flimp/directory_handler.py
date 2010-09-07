@@ -49,7 +49,9 @@ def process(root_dir, username, name, desc, uuid=None, about=None,
 
     Returns the object id of the object that was tagged
     """
-    logger.info('Root directory: %s' % root_dir)
+    logger.info('Directory: %s' % root_dir)
+    abs_path = os.path.abspath(root_dir)
+    logger.info('Absolute path: %s' % abs_path)
     if uuid:
         object_info = 'Tagging object with uuid: %s' % uuid
     elif about:
@@ -64,13 +66,13 @@ def process(root_dir, username, name, desc, uuid=None, about=None,
         output.append("Preview of processing %s\n" % root_dir)
         output.append(object_info + '\n')
         output.append("The following namespaces/tags will be generated.\n")
-        output.extend(get_preview(root_dir, username, name))
+        output.extend(get_preview(abs_path, username, name))
         result = "\n".join(output)
         logger.info(result)
         print result
     else:
-        return push_to_fluiddb(root_dir, username, name, desc, uuid=None, about=None,
-                        preview=preview)
+        return push_to_fluiddb(abs_path, username, name, desc, uuid=None,
+                               about=None)
 
 def get_preview(directory, username, name):
     """
@@ -128,23 +130,23 @@ def push_to_fluiddb(directory, username, name, desc, uuid=None, about=None):
                         new_tag = new_ns.create_tag(f,
                                                     TAG_DESC % (f, name, desc),
                                                     False)
-                        logging.info('Done')
+                        logger.info('Done')
                     except Fluid412Error:
                         # 412 simply means the tag already exists
                         new_tag = Tag(tag_path)
                         logger.info('(%s already existed)' % new_tag.path)
                     file_path = os.path.join(path, f)
-                    logging.info('Preparing file %s for upload' % file_path)
+                    logger.info('Preparing file %s for upload' % file_path)
                     content_type, encoding = guess_type(file_path)
-                    logging.info('Content-Type of %s detected' % content_type)
+                    logger.info('Content-Type of %s detected' % content_type)
                     # now attach it to the object
                     raw_file = open(file_path, 'r')
-                    logging.info('Pushing file %s to object %s on tag %s' %
+                    logger.info('Pushing file %s to object %s on tag %s' %
                                  (file_path, obj.uid, new_tag.path))
                     obj.set(new_tag.path, raw_file.read(), content_type)
-                    logging.info('DONE!')
+                    logger.info('DONE!')
                     raw_file.close()
-    logging.info('Finished tagging the object with the uuid %s' % obj.uid)
+    logger.info('Finished tagging the object with the uuid %s' % obj.uid)
     return obj
 
 def make_namespace(path, name, desc):

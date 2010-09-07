@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 import logging
 import os
+import sys
+from traceback import format_exception
 from optparse import OptionParser
 from getpass import getpass
 from file_handler import VALID_FILETYPES, process as process_file
@@ -123,11 +125,16 @@ def execute():
             process_file(options.filename, username, name, desc, about,
                                 options.preview)
         else:
-            process_directory(options.directory, username, name, desc,
+            obj = process_directory(options.directory, username, name, desc,
                               options.uuid, options.about, options.preview)
+            msg = 'Tags added to object with uuid: %s' % obj.uid
+            logger.info(msg)
+            print msg
     except Exception, e:
         # We want to catch all exceptions so we can log them nicely
-        logger.critical(e)
+        ex_type, ex_val, ex_trace = sys.exc_info()
+        for msg in format_exception(ex_type, ex_val, ex_trace):
+            logger.critical(msg)
         # this will be handled by nicely by the try of last resort in the
         # flimp command line tool
         raise e
