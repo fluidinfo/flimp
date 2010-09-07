@@ -55,6 +55,8 @@ tag value.
 Flimp attempts to guess the correct mime-type to use when importing the file
 content.
 
+Flimp ignores hidden files and directories (starting with `'.'`).
+
 Example usage::
 
     flimp -d path

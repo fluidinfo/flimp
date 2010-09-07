@@ -42,6 +42,8 @@ When importing data from the filesystem flimp will map things like this:
 * Filename -> Tag
 * File content -> A value tagged to an object
 
+Flimp will ignore hidden files and directories (those starting with `'.'`).
+
 It is possible to specify the object to be tagged with filesystem based data.
 In fact, it's possible to customise most of the aspects of importing data into
 FluidDB. See the example of the help message below for more information.
