@@ -12,6 +12,8 @@ Help can be obtained like this::
 
     flimp -h
 
+Take a look in the docs directory for extensive help.
+
 Importing Data Files
 --------------------
 
