@@ -1,4 +1,4 @@
-**FL**uid **IMP**orter
+FLuid IMPorter
 ==============
 
 This package provides a set of modules and a script that makes it easy to
