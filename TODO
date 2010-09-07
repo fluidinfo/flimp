@@ -1,6 +1,2 @@
-* Add a preview function to enable users to check the namespace/tag schema
-has been generated correctly.
 * Create a plugin system so third-parties can write their own parsers for
 different file formats.
-* Handle the importing of a filesystem (directories -> namespaces, files ->
-tags, file content -> tag values)
