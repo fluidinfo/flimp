@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='flimp',
-      version='0.2',
+      version='0.3',
       description='FLuiddb IMPorter - automates importing data into FluidDB',
       author='Nicholas H.Tollervey',
       author_email='ntoll@ntoll.org',
@@ -12,5 +12,5 @@ setup(name='flimp',
       scripts=['bin/flimp'],
       requires=['fom', 'PyYaml'],
       license='MIT',
-      long_description=open('README').read(),
+      long_description=open('README.rst').read(),
      )

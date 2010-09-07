@@ -121,9 +121,12 @@ def execute():
 
     # Process the file or directory
     try:
+        print "Working... (this might take some time, why not: tail -f the"\
+            " log?)"
         if options.filename:
             process_file(options.filename, username, name, desc, about,
                                 options.preview)
+            print "Done"
         else:
             obj = process_directory(options.directory, username, name, desc,
                               options.uuid, options.about, options.preview)
