@@ -71,8 +71,7 @@ def process(root_dir, username, name, desc, uuid=None, about=None,
         logger.info(result)
         print result
     else:
-        return push_to_fluiddb(abs_path, username, name, desc, uuid=None,
-                               about=None)
+        return push_to_fluiddb(abs_path, username, name, desc, uuid, about)
 
 def get_preview(directory, username, name):
     """
