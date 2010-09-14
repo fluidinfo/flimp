@@ -99,6 +99,8 @@ def execute():
     # arguments of the command
     username = get_argument('FluidDB username')
     password = get_argument('FluidDB password', password=True)
+    root_path = get_argument('Absolute Namespace path (under which imported'\
+                             ' namespaces and tags will be created)')
     if options.filename:
         name = get_argument('Name of dataset (defaults to filename)',
                         os.path.basename(options.filename).split('.')[0])
@@ -111,6 +113,7 @@ def execute():
     # Dump the recently collected information into the log file
     logger.info('FluidDB instance: %s' % options.instance)
     logger.info('Username: %s' % username)
+    logger.info('Absolute Namespace path: %s' % root_path)
     logger.info('Dataset name: %s' % name)
     logger.info('Dataset description: %s' % desc)
 
@@ -124,12 +127,13 @@ def execute():
         print "Working... (this might take some time, why not: tail -f the"\
             " log?)"
         if options.filename:
-            process_file(options.filename, username, name, desc, about,
-                                options.preview)
+            process_file(options.filename, root_path, username, name, desc,
+                         about, options.preview)
             print "Done"
         else:
-            obj = process_directory(options.directory, username, name, desc,
-                              options.uuid, options.about, options.preview)
+            obj = process_directory(options.directory, root_path, username,
+                                    name, desc, options.uuid, options.about,
+                                    options.preview)
             msg = 'Tags added to object with uuid: %s' % obj.uid
             logger.info(msg)
             print msg
@@ -138,10 +142,11 @@ def execute():
         ex_type, ex_val, ex_trace = sys.exc_info()
         for msg in format_exception(ex_type, ex_val, ex_trace):
             logger.critical(msg)
-        # this will be handled by nicely by the try of last resort in the
+        # this will be handled nicely by the try of last resort in the
         # flimp command line tool
         raise e
-    logger.info('FINISHED!') # :-)
+    finally:
+        logger.info('FINISHED!') # :-)
 
 def get_argument(description, default_value=None, required=True,
                  password=False):

@@ -30,10 +30,9 @@ if sys.version_info < (2, 6):
     import simplejson as json
 else:
     import json
-from fom.errors import Fluid412Error
-from fom.mapping import Namespace, Tag, Object, tag_value
+from fom.mapping import Object, tag_value
 from flimp.parser import parse_json, parse_yaml, parse_csv
-from flimp import NAMESPACE_DESC, TAG_DESC
+from flimp.utils import make_namespace, make_tag, make_namespace_path
 
 VALID_FILETYPES = {
     'json': parse_json,
@@ -43,7 +42,7 @@ VALID_FILETYPES = {
 
 logger = logging.getLogger("flimp")
 
-def process(filename, username, name, desc, about, preview):
+def process(filename, root_path, username, name, desc, about, preview):
     """
     The recipe for grabbing the file and pushing it to FluidDB
     """
@@ -51,6 +50,7 @@ def process(filename, username, name, desc, about, preview):
     # to import into FluidDB
     raw_data = clean_data(filename)
     logger.info('Raw filename: %s' % filename)
+    logger.info('Root namespace path: %s' % root_path)
     logger.info('About tag field key: %s' % about)
     logger.info('%d records found' % len(raw_data))
 
@@ -60,14 +60,16 @@ def process(filename, username, name, desc, about, preview):
         output = list()
         output.append("Preview of processing %s\n" % filename)
         output.append("The following namespaces/tags will be generated.\n")
-        output.extend(get_preview(raw_data, username, name))
+        output.extend(get_preview(raw_data, username, root_path))
+        output.append("\n%d records will be imported into FluidDB\n" %
+                      len(raw_data))
         result = "\n".join(output)
         logger.info(result)
         print result
     else:
         # Use the first item in the list of items 
         logger.info('Creating namespace/tag schema in FluidDB')
-        tag_dict = create_schema(raw_data, username, name, desc)
+        tag_dict = create_schema(raw_data, root_path, username, name, desc)
         logger.info('Created %d new tag[s]' % len(tag_dict))
         logger.info(tag_dict.keys())
 
@@ -79,15 +81,15 @@ def process(filename, username, name, desc, about, preview):
 
         # Given the newly existing class push all the data to FluidDB
         logger.info('Starting to push records to FluidDB')
-        push_to_fluiddb(raw_data, fom_class, about, name, username)
+        push_to_fluiddb(raw_data, root_path, fom_class, about, name, username)
 
-def get_preview(raw_data, username, name):
+def get_preview(raw_data, username, root_path):
     """
     Returns a list of the namespace/tag combinations that will be created
     """
     template = raw_data[0]
     result = list()
-    traverse_preview(template, '/'.join([username, name]), result)
+    traverse_preview(template, root_path, result)
     return result
 
 def traverse_preview(template, parent, tags):
@@ -123,7 +125,7 @@ def clean_data(filename):
     f.close()
     return result
 
-def create_schema(raw_data, username, name, desc):
+def create_schema(raw_data, root_path, username, name, desc):
     """
     Given the raw data, username, dataset name and description will use the
     first record in raw_data as a template for generating namespaces and tags
@@ -135,9 +137,9 @@ def create_schema(raw_data, username, name, desc):
     attributes on a new FOM Object class.
     """
     template = raw_data[0]
-    root_ns = Namespace(username)
+    root_ns = make_namespace_path(root_path, name, desc)
     tags = {}
-    generate(root_ns, name, template, desc, name, tags)
+    generate(root_ns, None, template, desc, name, tags)
     return tags
 
 def generate(parent, child_name, template, description, name, tags):
@@ -148,17 +150,11 @@ def generate(parent, child_name, template, description, name, tags):
     Populates the "tags" dict with tag_value instances so it's possible to
     generate FOM Object based classes based on the newly created tags.
     """
-    try:
-        # Create the child namespace
-        logger.info('Creating new namespace "%s" under %s' % (child_name,
-                                                               parent.path))
-        ns = parent.create_namespace(child_name,
-                                 NAMESPACE_DESC % (child_name, name, description))
-        logger.info('Done.')
-    except Fluid412Error:
-        # 412 simply means the namespace already exists
-        ns = Namespace(parent.path + '/' + child_name)
-        logger.info('(%s already existed)' % ns.path)
+    # Create the child namespace
+    if child_name:
+        ns = make_namespace('/'.join([parent.path, child_name]), name, description)
+    else:
+        ns = parent
 
     for key, value in template.iteritems():
         # lets see what's in here
@@ -167,26 +163,21 @@ def generate(parent, child_name, template, description, name, tags):
             # and jump right in
             generate(ns, key, value, description, name, tags)
         else:
-            try:
-                # it must be a tag so create the tag within the current
-                # namespace
-                logger.info('Creating new tag "%s" under %s' % (key,
-                                                                 ns.path))
-                tag = ns.create_tag(key, TAG_DESC % (key, name, description),
-                                    False)
-            except Fluid412Error:
-                # 412 simply means the namespace already exists
-                tag = Tag(parent.path + '/' + child_name + '/' + key)
-                logger.info('(%s already existed)' % tag.path)
+            # it must be a tag so create the tag within the current namespace
+            tag = make_tag(ns, key, description, False)
             # Create the tag_value instance...
             # Lets make sure we specify the right sort of mime
             defaultType = None
             if isinstance(value, list) and not all(isinstance(x, basestring) for
                                                  x in value):
                 defaultType = 'application/json'
+                logger.info = 'Default mime-type: %s' % defaultType
             # the attribute will be named after the tag's path with slash
             # replaced by underscode. e.g. 'foo/bar' -> 'foo_bar'
-            tags[tag.path.replace('/', '_')] = tag_value(tag.path, defaultType)
+            attribute_name = tag.path.replace('/', '_')
+            logger.info('Mapping tag: %s to attribute: %s' %
+                        (tag.path, attribute_name))
+            tags[attribute_name] = tag_value(tag.path, defaultType)
 
 def create_class(tags):
     """
@@ -195,7 +186,7 @@ def create_class(tags):
     """
     return type('fom_class', (Object, ), tags)
 
-def push_to_fluiddb(raw_data, klass, about, name, username):
+def push_to_fluiddb(raw_data, root_path, klass, about, name, username):
     """
     Given the raw data and a class derived from FOM's Object class will import
     the data into FluidDB. Each item in the list mapping to a new object in
@@ -220,7 +211,7 @@ def push_to_fluiddb(raw_data, klass, about, name, username):
             obj.create()
         logger.info('Object %s successfully created' % obj.uid)
         # annotate it
-        tag_values = get_values(item, build_attribute_name([username, name,]))
+        tag_values = get_values(item, root_path.replace('/', '_') )
         for key, value in tag_values.iteritems():
             if (key in klass.__dict__.keys()):
                 if value:

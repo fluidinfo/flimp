@@ -19,11 +19,12 @@ class TestDirectoryHandler(unittest.TestCase):
         fdb.login('test', 'test')
 
     def test_get_preview(self):
-        result = get_preview(PATH_TO_TEST_DIRECTORY, 'test', 'flimp-test')
+        result = get_preview(PATH_TO_TEST_DIRECTORY, 'test',
+                             'test/this/is/a/test')
         expected = [
-            'test/flimp-test/test/bar/bar_child.txt CONTENT-TYPE: text/plain',
-            'test/flimp-test/test/foo/foo_child.txt CONTENT-TYPE: text/plain',
-            'test/flimp-test/test/readme.txt CONTENT-TYPE: text/plain',
+            'test/this/is/a/test/bar/bar_child.txt CONTENT-TYPE: text/plain',
+            'test/this/is/a/test/foo/foo_child.txt CONTENT-TYPE: text/plain',
+            'test/this/is/a/test/readme.txt CONTENT-TYPE: text/plain',
         ]
         self.assertEqual(len(expected), len(result))
         for item in expected:
@@ -54,12 +55,12 @@ class TestDirectoryHandler(unittest.TestCase):
         new_ns.delete()
 
     def test_push_to_fluiddb(self):
-        result = push_to_fluiddb(PATH_TO_TEST_DIRECTORY, 'test',
-                                 'flimp-test', 'A test for flimp')
+        result = push_to_fluiddb(PATH_TO_TEST_DIRECTORY, 'test/this/is/a/test',
+                                 'test', 'flimp-test', 'A test for flimp')
         expected = [
-            'test/flimp-test/test/bar/bar_child.txt',
-            'test/flimp-test/test/foo/foo_child.txt',
-            'test/flimp-test/test/readme.txt',
+            'test/this/is/a/test/bar/bar_child.txt',
+            'test/this/is/a/test/foo/foo_child.txt',
+            'test/this/is/a/test/readme.txt',
         ]
         # check the resulting object has the right tags
         self.assertEqual(len(expected), len(result.tag_paths))
@@ -68,7 +69,7 @@ class TestDirectoryHandler(unittest.TestCase):
             # while we're looping lets make sure the tag-value is correct (it
             # worked)
             value = result.get(item)
-            relative_path = item.replace('test/flimp-test/test/', '')
+            relative_path = item.replace('test/this/is/a/test/', '')
             expected_file = open(os.path.join(PATH_TO_TEST_DIRECTORY,
                               relative_path), 'r')
             expected_value = expected_file.read()
