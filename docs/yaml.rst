@@ -36,8 +36,8 @@ Consider the following yaml snippet::
 
 
 If I provided the root namespace "ntoll/pubs", indicated that the "id" field was
-unique and to be used as the basis of the about tag value then we'd end up with
-the following namespaces/tags::
+unique and to be used as the basis of the about tag value, and that the name of
+the dataset was "pubs" then we'd end up with the following namespaces/tags::
 
   ntoll/pubs/cuisine
   ntoll/pubs/food

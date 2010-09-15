@@ -38,8 +38,8 @@ Consider the following directory tree::
        |
        +- bar_child.pdf
 
-Then if we have the username `test` and have given the dataset the name
-`my_data` the following tags will be created::
+Then if we provide the root namespace 'test/my_data' the following tags
+will be created::
 
     test/my_data/test_directory/readme.txt
     test/my_data/test_directory/foo/foo_child.jpg

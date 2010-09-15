@@ -23,7 +23,7 @@ fdb.bind()
 # Values to pass into the "process" function
 root_dir = 'test_dir' # the path to the directory you want to import
 root_path = 'test/foo' # the namespace in FluidDB that maps to root_dir
-name = 'dataset_name' # becomes the parent namespace
+name = 'dataset_name' # the name of the filesystem data to be imported
 desc = 'Plain English dataset description' # exactly what it says
 uuid = None # the uuid of the object to tag
 about = None # the about value of the object to tag
