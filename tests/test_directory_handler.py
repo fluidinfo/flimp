@@ -1,7 +1,7 @@
 import os
 import unittest
 import uuid
-from flimp.directory_handler import (get_preview, get_object, make_namespace,
+from flimp.directory_handler import (get_preview, get_object,
     push_to_fluiddb)
 from fom.session import Fluid
 from fom.mapping import Namespace, Tag, Object
@@ -39,19 +39,6 @@ class TestDirectoryHandler(unittest.TestCase):
         obj3 = get_object()
         self.assertTrue(obj3.uid)
         self.assertRaises(Fluid404Error, getattr, obj3, "about")
-
-    def test_make_namespace(self):
-        name = str(uuid.uuid4())
-        path = 'test/%s' % name
-        desc = 'this is a test'
-        # make a new namespace
-        new_ns = make_namespace(path, name, desc)
-        self.assertEqual(path, new_ns.path)
-        # try to make an existing namespace with no 412 error
-        same_ns = make_namespace(path, name, desc)
-        self.assertEqual(new_ns.path, same_ns.path)
-        # tidy up
-        new_ns.delete()
 
     def test_push_to_fluiddb(self):
         result = push_to_fluiddb(PATH_TO_TEST_DIRECTORY, 'test/this/is/a/test',
