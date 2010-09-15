@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+from flimp import VERSION
 
 setup(name='flimp',
-      version='0.5',
+      version=VERSION,
       description='FLuiddb IMPorter - automates importing data into FluidDB',
       author='Nicholas H.Tollervey',
       author_email='ntoll@ntoll.org',
