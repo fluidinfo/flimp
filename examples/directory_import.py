@@ -9,7 +9,8 @@ logger = logging.getLogger("flimp")
 logger.setLevel(logging.DEBUG)
 logfile_handler = logging.FileHandler('flimp.log')
 logfile_handler.setLevel(logging.DEBUG)
-log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - "\
+                               "%(message)s")
 logfile_handler.setFormatter(log_format)
 logger.addHandler(logfile_handler)
 
@@ -21,7 +22,7 @@ fdb.bind()
 
 # Values to pass into the "process" function
 root_dir = 'test_dir' # the path to the directory you want to import
-username = 'test' # the FluidDB username whose root namespace we'll use
+root_path = 'test/foo' # the namespace in FluidDB that maps to root_dir
 name = 'dataset_name' # becomes the parent namespace
 desc = 'Plain English dataset description' # exactly what it says
 uuid = None # the uuid of the object to tag
@@ -29,7 +30,7 @@ about = None # the about value of the object to tag
 preview = False # True will cause flimp to print out the preview
 
 # Make magic happen...
-obj = process(root_dir, username, name, desc, uuid, about, preview)
+obj = process(root_dir, root_path, name, desc, uuid, about, preview)
 # obj is a fom.mapping.Object instance representing the FluidDB object that
 # has just been tagged
 print obj.uid

@@ -19,8 +19,7 @@ class TestDirectoryHandler(unittest.TestCase):
         fdb.login('test', 'test')
 
     def test_get_preview(self):
-        result = get_preview(PATH_TO_TEST_DIRECTORY, 'test',
-                             'test/this/is/a/test')
+        result = get_preview(PATH_TO_TEST_DIRECTORY, 'test/this/is/a/test')
         expected = [
             'test/this/is/a/test/bar/bar_child.txt CONTENT-TYPE: text/plain',
             'test/this/is/a/test/foo/foo_child.txt CONTENT-TYPE: text/plain',
@@ -56,7 +55,7 @@ class TestDirectoryHandler(unittest.TestCase):
 
     def test_push_to_fluiddb(self):
         result = push_to_fluiddb(PATH_TO_TEST_DIRECTORY, 'test/this/is/a/test',
-                                 'test', 'flimp-test', 'A test for flimp')
+                                 'flimp-test', 'A test for flimp')
         expected = [
             'test/this/is/a/test/bar/bar_child.txt',
             'test/this/is/a/test/foo/foo_child.txt',

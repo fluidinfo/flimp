@@ -42,7 +42,7 @@ class TestUtils(unittest.TestCase):
     def test_make_namespace_path(self):
         # create a new namespace path (returning the leaf namespace)
         unique_ns = str(uuid.uuid4())
-        path = "test/%s/foo" % unique_ns 
+        path = "test/%s/foo" % unique_ns
         result = make_namespace_path(path, 'flimp-test', 'For the purposes of'
                                 ' testing flimp')
         self.assertEqual(path, result.path)

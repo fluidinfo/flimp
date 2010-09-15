@@ -75,9 +75,12 @@ Usage
       -l LOG, --log=LOG     The log file to write to (defaults to flimp.log)
       -v, --verbose         Display status messages to console
 
+
+
     $ flimp -f data.json
     FluidDB username: test
     FluidDB password: 
+    Absolute Namespace path (under which imported namespaces and tags will be created): test/foo
     Name of dataset (defaults to filename) [data]: test_data 
     Key field for about tag value (if none given, will use anonymous objects): 
     Description of the dataset: This is a test
@@ -87,12 +90,17 @@ Usage
     $ flimp -d test_directory 
     FluidDB username: test
     FluidDB password: 
+    Absolute Namespace path (under which imported namespaces and tags will be created): test/bar
     Name of dataset: testdata
     Description of the dataset: This is some test data
     Working... (this might take some time, why not: tail -f the log?)
     Tags added to object with uuid: 4d21335a-d584-4db6-bed8-ac19cb75ee32
 
 As shown above, flimp asks for some basic information and then runs its course.
+
+The *"Absolute Namespace path"* query allows you to specify where in FluidDB's
+namespace tree the tags and namespaces required to represent the data will be
+created.
 
 Use the ``-p`` flag to generate a preview rather than import the actual data.
 
@@ -104,11 +112,6 @@ without associated about tags. It is important to note that flimp *does not
 check* that the field and associated values are unique. It assumes you know
 what you're doing (you have been warned).
 
-New namespaces and tags are created under the root namespace of the
-user whose credentials you supplied. Flimp creates a namespace with the
-same name as the dataset and generates all the other namespaces and tags 
-underneath this.
-
 Flimp keeps a log of what it's doing in the ``flimp.log`` file found in your
 current working directory (you can override this).
 
@@ -119,7 +122,7 @@ How flimp parses
 ----------------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    json
    csv

@@ -9,7 +9,7 @@ headers. It attempts to detect these headers and uses them as the basis for
 creating the tags used to annotate the objects within FluidDB. It also
 attempts to make a good guess at the dialect used to format the CSV file.
 
-Each of the remaining lines in the CSV file will be treated as the basis for
+Each of the remaining lines in the CSV file are treated as the basis for
 new objects in FluidDB.
 
 Examples

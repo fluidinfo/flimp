@@ -9,7 +9,8 @@ logger = logging.getLogger("flimp")
 logger.setLevel(logging.DEBUG)
 logfile_handler = logging.FileHandler('flimp.log')
 logfile_handler.setLevel(logging.DEBUG)
-log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - "\
+                               "%(message)s")
 logfile_handler.setFormatter(log_format)
 logger.addHandler(logfile_handler)
 
@@ -20,12 +21,12 @@ fdb.login('test', 'test') # replace these with something that works
 fdb.bind()
 
 # Values to pass into the "process" function
-filename = 'data.json'
-username = 'test' # the FluidDB username whose root namespace we'll use
-name = 'dataset_name' # becomes the parent namespace
+filename = 'data.json' # location of the file to import
+root_path = 'test/foo'# Namespace where imported namespaces/tags are created
+name = 'dataset_name' # used when creating namespace/tag descriptions 
 desc = 'Plain English dataset description' # exactly what it says
 about = 'id' # field whose value to use for the about tag
 preview = False # True will cause flimp to print out the preview
 
 # Make magic happen...
-process(filename, username, name, desc, about, preview)
+process(filename, root_path, name, desc, about, preview)

@@ -40,7 +40,7 @@ from flimp.utils import make_namespace, make_tag, make_namespace_path
 
 logger = logging.getLogger("flimp")
 
-def process(root_dir, fluiddb_path, username, name, desc, uuid=None, about=None,
+def process(root_dir, fluiddb_path, name, desc, uuid=None, about=None,
             preview=None):
     """
     Given a root directory will import the contents of the filesystem therein
@@ -52,10 +52,7 @@ def process(root_dir, fluiddb_path, username, name, desc, uuid=None, about=None,
     root_dir - the path to the directory on the filesystem that will act as
     the root of the import
 
-    fluiddb_path - the path appended to the username to locate the namespace
-    that maps to root_dir
-
-    username - the fluiddb username whose root namespace we're using
+    fluiddb_path - the path to locate the namespace that maps to root_dir
 
     name - the name of the data that's being imported into FluidDB
 
@@ -84,15 +81,15 @@ def process(root_dir, fluiddb_path, username, name, desc, uuid=None, about=None,
         output.append("Preview of processing %s\n" % root_dir)
         output.append(object_info + '\n')
         output.append("The following namespaces/tags will be generated.\n")
-        output.extend(get_preview(abs_path, username, fluiddb_path))
+        output.extend(get_preview(abs_path, fluiddb_path))
         result = "\n".join(output)
         logger.info(result)
         print result
     else:
-        return push_to_fluiddb(abs_path, fluiddb_path, username, name, desc,
+        return push_to_fluiddb(abs_path, fluiddb_path, name, desc,
                                uuid=None, about=None)
 
-def get_preview(directory, username, fluiddb_path):
+def get_preview(directory, fluiddb_path):
     """
     Returns a list of the namespace/tag combinations that will be created
     """
@@ -119,7 +116,7 @@ def get_preview(directory, username, fluiddb_path):
                                                                   content_type))
     return tag_paths
 
-def push_to_fluiddb(directory, fluiddb_path, username, name, desc, uuid=None,
+def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
                     about=None):
     """
     Pushes the contents of the specified directory as tag-values on a
@@ -130,10 +127,7 @@ def push_to_fluiddb(directory, fluiddb_path, username, name, desc, uuid=None,
     root_dir - the path to the directory on the filesystem that will act as
     the root of the import
 
-    fluiddb_path - the path appended to the username to locate the namespace
-    that maps to root_dir
-
-    username - the fluiddb username whose root namespace we're using
+    fluiddb_path - the path to locate the namespace that maps to root_dir
 
     name - the name of the data that's being imported into FluidDB
 

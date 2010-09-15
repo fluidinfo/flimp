@@ -42,7 +42,7 @@ VALID_FILETYPES = {
 
 logger = logging.getLogger("flimp")
 
-def process(filename, root_path, username, name, desc, about, preview):
+def process(filename, root_path, name, desc, about, preview):
     """
     The recipe for grabbing the file and pushing it to FluidDB
     """
@@ -60,7 +60,7 @@ def process(filename, root_path, username, name, desc, about, preview):
         output = list()
         output.append("Preview of processing %s\n" % filename)
         output.append("The following namespaces/tags will be generated.\n")
-        output.extend(get_preview(raw_data, username, root_path))
+        output.extend(get_preview(raw_data, root_path))
         output.append("\n%d records will be imported into FluidDB\n" %
                       len(raw_data))
         result = "\n".join(output)
@@ -69,7 +69,7 @@ def process(filename, root_path, username, name, desc, about, preview):
     else:
         # Use the first item in the list of items 
         logger.info('Creating namespace/tag schema in FluidDB')
-        tag_dict = create_schema(raw_data, root_path, username, name, desc)
+        tag_dict = create_schema(raw_data, root_path, name, desc)
         logger.info('Created %d new tag[s]' % len(tag_dict))
         logger.info(tag_dict.keys())
 
@@ -81,9 +81,9 @@ def process(filename, root_path, username, name, desc, about, preview):
 
         # Given the newly existing class push all the data to FluidDB
         logger.info('Starting to push records to FluidDB')
-        push_to_fluiddb(raw_data, root_path, fom_class, about, name, username)
+        push_to_fluiddb(raw_data, root_path, fom_class, about, name)
 
-def get_preview(raw_data, username, root_path):
+def get_preview(raw_data, root_path):
     """
     Returns a list of the namespace/tag combinations that will be created
     """
@@ -125,9 +125,9 @@ def clean_data(filename):
     f.close()
     return result
 
-def create_schema(raw_data, root_path, username, name, desc):
+def create_schema(raw_data, root_path, name, desc):
     """
-    Given the raw data, username, dataset name and description will use the
+    Given the raw data, root_path, dataset name and description will use the
     first record in raw_data as a template for generating namespaces and tags
     underneath the user's root namespace.
 
@@ -171,12 +171,11 @@ def generate(parent, child_name, template, description, name, tags):
             if isinstance(value, list) and not all(isinstance(x, basestring) for
                                                  x in value):
                 defaultType = 'application/json'
-                logger.info = 'Default mime-type: %s' % defaultType
+                logger.info('Default mime-type: %s' % defaultType)
             # the attribute will be named after the tag's path with slash
             # replaced by underscode. e.g. 'foo/bar' -> 'foo_bar'
             attribute_name = tag.path.replace('/', '_')
-            logger.info('Mapping tag: %s to attribute: %s' %
-                        (tag.path, attribute_name))
+            logger.info('Mapping tag: %s to attribute: %s' % (tag.path, attribute_name))
             tags[attribute_name] = tag_value(tag.path, defaultType)
 
 def create_class(tags):
@@ -186,13 +185,12 @@ def create_class(tags):
     """
     return type('fom_class', (Object, ), tags)
 
-def push_to_fluiddb(raw_data, root_path, klass, about, name, username):
+def push_to_fluiddb(raw_data, root_path, klass, about, name):
     """
     Given the raw data and a class derived from FOM's Object class will import
     the data into FluidDB. Each item in the list mapping to a new object in
     FluidDB. The 'about' and 'name' arguments are used to automate the
-    generation of the about tag and associated value. The 'name' and
-    'username' arguments are used to build the root path
+    generation of the about tag and associated value.
     """
     length = len(raw_data)
     counter = 1

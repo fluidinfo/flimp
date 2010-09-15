@@ -35,9 +35,9 @@ Consider the following yaml snippet::
     real ale: true
 
 
-If I gave this dataset the name "pubs", indicated that the "id" field was
-unique and to be used as the basis of the about tag and that my username
-was "ntoll" then we'd end up with the following namespaces/tags::
+If I provided the root namespace "ntoll/pubs", indicated that the "id" field was
+unique and to be used as the basis of the about tag value then we'd end up with
+the following namespaces/tags::
 
   ntoll/pubs/cuisine
   ntoll/pubs/food

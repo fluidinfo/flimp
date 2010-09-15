@@ -38,7 +38,7 @@ class TestFileHandler(unittest.TestCase):
         fdb.login('test', 'test')
 
     def test_get_preview(self):
-        result = get_preview(TEMPLATE, 'test', 'test/flimp-test')
+        result = get_preview(TEMPLATE, 'test/flimp-test')
         expected = ['test/flimp-test/foo',
                     'test/flimp-test/baz/qux',
                     'test/flimp-test/quux',
@@ -56,8 +56,8 @@ class TestFileHandler(unittest.TestCase):
         self.assertRaises(TypeError, clean_data, UNKNOWN_TYPE)
 
     def test_create_schema(self):
-        tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'test',
-                             'flimp-test', 'flimp unit-test suite')
+        tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',
+                             'flimp unit-test suite')
         self.assertEqual(4, len(tags))
 
     def test_generate(self):
@@ -74,8 +74,8 @@ class TestFileHandler(unittest.TestCase):
         self.assertTrue('test_%s_corge' % name in tags)
 
     def test_create_class(self):
-        tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'test',
-                             'flimp-test', 'flimp unit-test suite')
+        tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',
+                             'flimp unit-test suite')
         self.assertEqual(4, len(tags))
         fom_class = create_class(tags)
         attributes = dir(fom_class)
@@ -86,19 +86,19 @@ class TestFileHandler(unittest.TestCase):
         # setting stuff up...
         name = str(uuid.uuid4())
         root_path = 'test/%s' % name
-        tags = create_schema(TEMPLATE, root_path, 'test', 'flimp_test',
+        tags = create_schema(TEMPLATE, root_path, 'flimp_test',
                              'flimp unit-test suite')
         self.assertEqual(4, len(tags))
         fom_class = create_class(tags)
         # the good case
         push_to_fluiddb(TEMPLATE, root_path, fom_class, 'foo',
-                        'flimp_test', 'test')
+                        'flimp_test')
         # check an object was created
         result = Object.filter("has %s/foo" % root_path)
         self.assertEqual(1, len(result))
         # lets try the other good case where we don't have an about tag field
         push_to_fluiddb(TEMPLATE, root_path, fom_class, None,
-                        'flimp_test', 'test')
+                        'flimp_test')
         # we should have *two* objects now
         result = Object.filter("has %s/foo" % root_path)
         self.assertEqual(2, len(result))
