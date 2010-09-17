@@ -79,7 +79,7 @@ class TestFileHandler(unittest.TestCase):
         self.assertEqual(4, len(tags))
         fom_class = create_class(tags)
         attributes = dir(fom_class)
-        for k in tags.keys():
+        for k in tags:
             self.assertTrue(k in attributes)
 
     def test_push_to_fluiddb(self):
@@ -105,7 +105,7 @@ class TestFileHandler(unittest.TestCase):
         # check we have all the expected tags on the objects
         for obj in result:
             tag_paths = obj.tag_paths
-            for k in tags.keys():
+            for k in tags:
                 tag_name = k.replace('_', '/')
                 self.assertTrue(tag_name in tag_paths)
 

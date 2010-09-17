@@ -1,7 +1,6 @@
 """
 Turns a filename into a list of deserialized items based upon csv data
 """
-import sys
 import csv
 
 def parse(raw_file):
@@ -9,9 +8,9 @@ def parse(raw_file):
     Given a filename, will load it and attempt to de-serialize the csv
     therein.
 
-    Also makes sure we have a non-empty list as a result
+    Also makes sure we have a non-empty list as a result.
 
-    Assumes that the first line will be a list of column names
+    Assumes that the first line will be a list of column names.
     """
     # try to determine some useful information about the CSV file
     header = csv.Sniffer().has_header(raw_file.read(1024))
@@ -41,8 +40,8 @@ def parse(raw_file):
         item = dict(zip(headers, row))
         data.append(item)
 
-    # Final check 
-    if len(data) > 0:
+    # Final check that we actually got some data.
+    if data:
         return data
     else:
         raise ValueError('No records found')

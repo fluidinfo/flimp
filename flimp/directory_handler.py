@@ -34,8 +34,7 @@ if sys.version_info < (2, 6):
     import simplejson as json
 else:
     import json
-from fom.errors import Fluid412Error
-from fom.mapping import Object, tag_value
+from fom.mapping import Object
 from flimp.utils import make_namespace, make_tag, make_namespace_path
 
 logger = logging.getLogger("flimp")
@@ -64,13 +63,13 @@ def process(root_dir, fluiddb_path, name, desc, uuid=None, about=None,
 
     preview - If true, will print out a preview and not import the data
     """
-    logger.info('Directory: %s' % root_dir)
+    logger.info('Directory: %r' % root_dir)
     abs_path = os.path.abspath(root_dir)
-    logger.info('Absolute path: %s' % abs_path)
+    logger.info('Absolute path: %r' % abs_path)
     if uuid:
-        object_info = 'Tagging object with uuid: %s' % uuid
+        object_info = 'Tagging object with uuid: %r' % uuid
     elif about:
-        object_info = 'Tagging object about: %s' % about
+        object_info = 'Tagging object about: %r' % about
     else:
         object_info = 'Tagging a new anonymous object (no about or uuid given)'
     logger.info(object_info)
@@ -78,7 +77,7 @@ def process(root_dir, fluiddb_path, name, desc, uuid=None, about=None,
     if preview:
         logger.info('Generating preview...')
         output = list()
-        output.append("Preview of processing %s\n" % root_dir)
+        output.append("Preview of processing %r\n" % root_dir)
         output.append(object_info + '\n')
         output.append("The following namespaces/tags will be generated.\n")
         output.extend(get_preview(abs_path, fluiddb_path))
@@ -112,7 +111,7 @@ def get_preview(directory, fluiddb_path):
                     if not content_type:
                         content_type = 'UNKNOWN'
                     tag_paths.append('%s CONTENT-TYPE: %s' % (tag_path,
-                                                                  content_type))
+                                                              content_type))
     return tag_paths
 
 def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
@@ -139,7 +138,7 @@ def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
     # get the object we'll be using
     obj = get_object(uuid, about)
 
-    # make sure we have the appropriate "fluidinfo_path" based namespaces 
+    # make sure we have the appropriate "fluidinfo_path" based namespaces
     # underneath the user's root namespace
     root_namespace = make_namespace_path(fluiddb_path, name, desc)
 
@@ -160,36 +159,37 @@ def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
             for f in files:
                 if not f.startswith('.'): # ignore hidden files
                     # create/check the tag from the filename
+                    # TODO: tag_path is not used.
                     tag_path = os.path.join(new_ns.path, f)
                     new_tag = make_tag(new_ns, f, name, desc, False)
                     file_path = os.path.join(path, f)
-                    logger.info('Preparing file %s for upload' % file_path)
+                    logger.info('Preparing file %r for upload' % file_path)
                     content_type, encoding = guess_type(file_path)
-                    logger.info('Content-Type of %s detected' % content_type)
+                    logger.info('Content-Type of %r detected' % content_type)
                     # now attach it to the object
                     raw_file = open(file_path, 'r')
-                    logger.info('Pushing file %s to object %s on tag %s' %
-                                 (file_path, obj.uid, new_tag.path))
+                    logger.info('Pushing file %r to object %r on tag %r' %
+                                (file_path, obj.uid, new_tag.path))
                     obj.set(new_tag.path, raw_file.read(), content_type)
                     logger.info('DONE!')
                     raw_file.close()
-    logger.info('Finished tagging the object with the uuid %s' % obj.uid)
+    logger.info('Finished tagging the object with the uuid %r' % obj.uid)
     return obj
 
 def get_object(uuid=None, about=None):
     """
-    Will return the referenced object or a new object if uuid or about are not
+    Returns the referenced object or a new object if uuid or about are not
     given.
     """
     logger.info("Getting object")
     if uuid:
-        logger.info("Object with uuid %s" % uuid)
+        logger.info("Object with uuid %r" % uuid)
         return Object(uid=uuid)
     elif about:
-        logger.info("Object with about tag value: %s" % about)
+        logger.info("Object with about tag value: %r" % about)
         return Object(about=about)
     else:
         o = Object()
         o.create()
-        logger.info("New object with uuid %s" % o.uid)
+        logger.info("New object with uuid %r" % o.uid)
         return o

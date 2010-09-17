@@ -25,6 +25,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 import sys
+import os
 import logging
 if sys.version_info < (2, 6):
     import simplejson as json
@@ -35,9 +36,9 @@ from flimp.parser import parse_json, parse_yaml, parse_csv
 from flimp.utils import make_namespace, make_tag, make_namespace_path
 
 VALID_FILETYPES = {
-    'json': parse_json,
-    'csv': parse_csv,
-    'yaml': parse_yaml
+    '.json': parse_json,
+    '.csv': parse_csv,
+    '.yaml': parse_yaml
 }
 
 logger = logging.getLogger("flimp")
@@ -49,16 +50,16 @@ def process(filename, root_path, name, desc, about, preview):
     # Turn the raw input file into a list data structure containing the items
     # to import into FluidDB
     raw_data = clean_data(filename)
-    logger.info('Raw filename: %s' % filename)
-    logger.info('Root namespace path: %s' % root_path)
-    logger.info('About tag field key: %s' % about)
+    logger.info('Raw filename: %r' % filename)
+    logger.info('Root namespace path: %r' % root_path)
+    logger.info('About tag field key: %r' % about)
     logger.info('%d records found' % len(raw_data))
 
     if preview:
         # just print out/log a preview
         logger.info('Generating preview...')
         output = list()
-        output.append("Preview of processing %s\n" % filename)
+        output.append("Preview of processing %r\n" % filename)
         output.append("The following namespaces/tags will be generated.\n")
         output.extend(get_preview(raw_data, root_path))
         output.append("\n%d records will be imported into FluidDB\n" %
@@ -67,13 +68,13 @@ def process(filename, root_path, name, desc, about, preview):
         logger.info(result)
         print result
     else:
-        # Use the first item in the list of items 
+        # Use the first item in the list of items
         logger.info('Creating namespace/tag schema in FluidDB')
         tag_dict = create_schema(raw_data, root_path, name, desc)
         logger.info('Created %d new tag[s]' % len(tag_dict))
         logger.info(tag_dict.keys())
 
-        # Create a FOM class that inherits from Object to use to interract with
+        # Create a FOM class that inherits from Object to use to interact with
         # FluidDB
         logger.info('Creating new FOM Object class')
         fom_class = create_class(tag_dict)
@@ -97,7 +98,7 @@ def traverse_preview(template, parent, tags):
     Does exactly what it says - traverses the preview dict and adds fully
     qualified tag paths to the result list
     """
-    logger.info('Found namespace: %s' % parent)
+    logger.info('Found namespace: %r' % parent)
     for key, value in template.iteritems():
         # lets see what's in here
         if isinstance(value, dict):
@@ -106,7 +107,7 @@ def traverse_preview(template, parent, tags):
             traverse_preview(value, '/'.join([parent, key]), tags)
         else:
             # Yay! it's a tag!
-            logger.info('Found tag: %s' % key)
+            logger.info('Found tag: %r' % key)
             tags.append('/'.join([parent, key]))
 
 def clean_data(filename):
@@ -114,16 +115,17 @@ def clean_data(filename):
     Given a filename will open it and pass it to the appropriate parser to
     turn it into a dictionary object for further processing
     """
-    extension = filename.split('.')[-1:][0]
-    if not extension in VALID_FILETYPES.keys():
-        raise TypeError('Unknown file type to parse')
-
-    f = open(filename, 'r')
-
-    logger.info('Parsing %s' % extension)
-    result = VALID_FILETYPES[extension].parse(f)
-    f.close()
-    return result
+    extension = os.path.splitext(filename)[1]
+    try:
+        parser = VALID_FILETYPES[extension]
+    except KeyError:
+        raise TypeError('Unknown file extension %r to parse' % extension)
+    else:
+        f = open(filename, 'r')
+        logger.info('Parsing %r' % extension)
+        result = parser.parse(f)
+        f.close()
+        return result
 
 def create_schema(raw_data, root_path, name, desc):
     """
@@ -171,11 +173,12 @@ def generate(parent, child_name, template, description, name, tags):
             if isinstance(value, list) and not all(isinstance(x, basestring) for
                                                  x in value):
                 defaultType = 'application/json'
-                logger.info('Default mime-type: %s' % defaultType)
+                logger.info("Found list that's not all strings, setting JSON tag value "
+                            "with MIME type %r" % defaultType)
             # the attribute will be named after the tag's path with slash
-            # replaced by underscode. e.g. 'foo/bar' -> 'foo_bar'
+            # replaced by underscore. e.g. 'foo/bar' -> 'foo_bar'
             attribute_name = tag.path.replace('/', '_')
-            logger.info('Mapping tag: %s to attribute: %s' % (tag.path, attribute_name))
+            logger.info('Mapping tag: %r to attribute: %r' % (tag.path, attribute_name))
             tags[attribute_name] = tag_value(tag.path, defaultType)
 
 def create_class(tags):
@@ -193,35 +196,32 @@ def push_to_fluiddb(raw_data, root_path, klass, about, name):
     generation of the about tag and associated value.
     """
     length = len(raw_data)
-    counter = 1
-    for item in raw_data:
-        logger.info("Processing record %d of %d" % (counter, length))
-        counter += 1
+    for counter, item in enumerate(raw_data):
+        logger.info("Processing record %d of %d" % (counter + 1, length))
         # create the object
         if about:
             about_value = "%s:%s" % (name, item[about])
-            logger.info('Creating new object with about tag value: %s' %
+            logger.info('Creating new object with about tag value: %r' %
                      about_value)
             obj = klass(about=about_value)
         else:
             logger.info('Creating a new anonymous object')
             obj = klass()
             obj.create()
-        logger.info('Object %s successfully created' % obj.uid)
+        logger.info('Object %r successfully created' % obj.uid)
         # annotate it
         tag_values = get_values(item, root_path.replace('/', '_') )
         for key, value in tag_values.iteritems():
-            if (key in klass.__dict__.keys()):
-                if value:
-                    setattr(obj, key, value)
-                    logger.info('Set: %s to: %s' % (key, value))
+            if key in klass.__dict__:
+                setattr(obj, key, value)
+                logger.info('Set: %r to: %r' % (key, value))
             else:
-                logger.error('Unable to set %s (unknown attribute)' % key)
+                logger.error('Unable to set %r (unknown attribute)' % key)
         if about:
-            logger.info('Finished annotating Object about "%s" with id: %s' %
+            logger.info('Finished annotating Object about %r with id: %r' %
                          (about_value, obj.uid))
         else:
-            logger.info('Finished annotating anonymous Object with id: %s' %
+            logger.info('Finished annotating anonymous Object with id: %r' %
                          obj.uid)
 
 def get_values(item, parent):
@@ -233,11 +233,16 @@ def get_values(item, parent):
     vals = {}
     for key, value in item.iteritems():
         if isinstance(value, dict):
+            # Why not:
+            # vals.update(get_values(value, '%s_%s' % (parent, key)))
             vals.update(get_values(value, build_attribute_name([parent, key])))
         else:
+            # Why not:
+            # vals['%s_%s' % (parent, key)] = value
             vals[build_attribute_name([parent, key])] = value
     return vals
 
+# This goes away if the 'why not?' above is followed.
 def build_attribute_name(items):
     """
     Turns a list into a something that will be a "valid" attribute name

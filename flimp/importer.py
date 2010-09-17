@@ -33,7 +33,6 @@ from getpass import getpass
 from file_handler import VALID_FILETYPES, process as process_file
 from directory_handler import process as process_directory
 from fom.session import Fluid
-from fom.mapping import Object
 import flimp
 
 def execute():
@@ -87,7 +86,7 @@ def execute():
     logfile_handler.setFormatter(log_format)
     logger.addHandler(logfile_handler)
     # verbose..?
-    if options.verbose == True:
+    if options.verbose:
         # console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)

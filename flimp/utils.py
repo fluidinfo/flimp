@@ -47,7 +47,7 @@ def make_namespace(path, name, desc):
     create (used when setting the description of the new namespace)
     """
     try:
-        logger.info('Checking namespace %s' % path)
+        logger.info('Checking namespace %r' % path)
         ns_head, ns_tail = os.path.split(path)
         result = Namespace(path)
         result.create(NAMESPACE_DESC % (ns_tail, name, desc))
@@ -55,7 +55,7 @@ def make_namespace(path, name, desc):
     except Fluid412Error:
         # 412 simply means the namespace already exists
         result = Namespace(path)
-        logger.info('(%s already existed)' % result.path)
+        logger.info('%r already existed' % result.path)
     return result
 
 def make_tag(parent_ns, name, dataset, desc, indexed=False):
@@ -79,13 +79,13 @@ def make_tag(parent_ns, name, dataset, desc, indexed=False):
     try:
         # it must be a tag so create the tag within the current
         # namespace
-        logger.info('Creating new tag "%s" under %s' % (name, parent_ns.path))
+        logger.info('Creating new tag "%r" under %r' % (name, parent_ns.path))
         tag = parent_ns.create_tag(name, TAG_DESC % (name, dataset, desc), False)
-        logger.info('Tag %s created' % tag.path)
+        logger.info('Tag %r created' % tag.path)
     except Fluid412Error:
         # 412 simply means the tag already exists
         tag = Tag(parent_ns.path + '/' + name)
-        logger.info('%s already existed' % tag.path)
+        logger.info('%r already existed' % tag.path)
     return tag
 
 def make_namespace_path(path, name, desc):
@@ -99,8 +99,8 @@ def make_namespace_path(path, name, desc):
     name - the name of the dataset that is causing the namespaces to be
     created (used when setting the description of the new namespace)
 
-    desc - the description of the dataset that's causing the namespace to be
-    created (used when setting the description of the new tag)
+    desc - the description of the dataset that's causing the namespace to
+    be created (used when setting the description of the new tag)
     """
     namespace_path = path.split('/')
     # put the user's root namespace in the checked_namespaces since it will
