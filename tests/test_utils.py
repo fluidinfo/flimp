@@ -79,18 +79,18 @@ class TestUtils(unittest.TestCase):
         # good
         data = [
             {
-                1: 'a',
-                2: {
-                    3: 'b'
+                'foo': 'a',
+                'bar': {
+                    'baz': 'b'
                 },
-                4: 'c'
+                'bof': 'c'
             },
             {
-                1: 'x',
-                2: {
-                    3: 'y'
+                'foo': 'x',
+                'bar': {
+                    'baz': 'y'
                 },
-                4: 'z'
+                'bof': 'z'
             },
         ]
         errors, warnings = validate(data)
@@ -99,71 +99,67 @@ class TestUtils(unittest.TestCase):
         # missing key
         data = [
             {
-                1: 'a',
-                2: {
-                    3: 'b'
+                'foo': 'a',
+                'bar': {
+                    'baz': 'b'
                 },
-                4: 'c'
+                'bof': 'c'
             },
             {
-                1: 'x',
-                2: {
-                    3: 'y'
+                'foo': 'x',
+                'bar': {
+                    'baz': 'y'
                 },
             },
         ]
         errors, warnings = validate(data)
         self.assertEqual([], warnings) # no problem
         self.assertEqual(1, len(errors))
-        self.assertEqual("Missing field 4 in record {1: 'x', 2: {3: "
-                         "'y'}}", errors[0])
+        self.assertTrue("Missing field 'bof'" in errors[0])
         # additional key
         data = [
             {
-                1: 'a',
-                2: {
-                    3: 'b'
+                'foo': 'a',
+                'bar': {
+                    'baz': 'b'
                 },
-                4: 'c'
+                'bof': 'c'
             },
             {
-                1: 'x',
-                2: {
-                    3: 'y',
+                'foo': 'x',
+                'bar': {
+                    'baz': 'y',
                 },
-                4: 'z',
-                'foo': 'bar'
+                'bof': 'z',
+                'qux': 'quux'
             },
         ]
         errors, warnings = validate(data)
         self.assertEqual([], errors) # no problem
         self.assertEqual(1, len(warnings))
-        self.assertEqual("Extra field 'foo' in record {1: 'x', 2: {3:"
-                         " 'y'}, 'foo': 'bar', 4: 'z'}", warnings[0])
+        self.assertTrue("Extra field 'qux' in record" in warnings[0])
         # check validation includes sub-dictionaries
         data = [
             {
-                1: 'a',
-                2: {
-                    3: 'b'
+                'foo': 'a',
+                'bar': {
+                    'baz': 'b'
                 },
-                4: 'c'
+                'bof': 'c'
             },
             {
-                1: 'x',
-                2: {
-                    'foo': 'bar'
+                'foo': 'x',
+                'bar': {
+                    'quux': 'bif'
                 },
-                4: 'z'
+                'bof': 'z'
             },
         ]
         errors, warnings = validate(data)
         self.assertEqual(1, len(warnings))
-        self.assertEqual("Extra field 'foo' in record {1: 'x', 2: {'foo':"
-                         " 'bar'}, 4: 'z'}", warnings[0])
+        self.assertTrue("Extra field 'quux' in record" in  warnings[0])
         self.assertEqual(1, len(errors))
-        self.assertEqual("Missing field 3 in record {1: 'x', 2: {'foo': "
-                         "'bar'}, 4: 'z'}", errors[0])
+        self.assertTrue("Missing field 'baz' in record" in errors[0])
 
     def test_create_schema(self):
         tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',

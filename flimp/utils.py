@@ -77,8 +77,6 @@ def make_tag(parent_ns, name, dataset, desc, indexed=False):
     search
     """
     try:
-        # it must be a tag so create the tag within the current
-        # namespace
         logger.info('Creating new tag "%r" under %r' % (name, parent_ns.path))
         tag = parent_ns.create_tag(name, TAG_DESC % (name, dataset, desc), False)
         logger.info('Tag %r created' % tag.path)
@@ -161,13 +159,13 @@ def validate_dict(template, to_be_checked, parent, error_log, warning_log):
     will be logged.
     """
     for k in to_be_checked:
-        if not k.strip() in template:
-            warning_log.append("Extra field %r in record %r"
-                              % (k, parent))
+        k = k.strip()
+        if not k in template:
+            warning_log.append("Extra field %r in record %r" % (k, parent))
     for k in template:
-        if not k.strip() in to_be_checked:
-            error_log.append("Missing field %r in record %r"
-                              % (k, parent))
+        k = k.strip()
+        if not k in to_be_checked:
+            error_log.append("Missing field %r in record %r" % (k, parent))
     for key, val in template.iteritems():
         if isinstance(val, dict):
             # check the inner dictionary
@@ -205,14 +203,16 @@ def generate(parent, child_name, template, description, name, tags):
         ns = parent
 
     for key, value in template.iteritems():
+        # drop all the white space
+        key = key.strip()
         # lets see what's in here
         if isinstance(value, dict):
             # ok... we have another dict, so we're doing depth first traversal
             # and jump right in
-            generate(ns, key.strip(), value, description, name, tags)
+            generate(ns, key, value, description, name, tags)
         else:
             # it must be a tag so create the tag within the current namespace
-            tag = make_tag(ns, key.strip(), description, False)
+            tag = make_tag(ns, key, description, False)
             # Create the tag_value instance...
             # Lets make sure we specify the right sort of mime
             defaultType = None
