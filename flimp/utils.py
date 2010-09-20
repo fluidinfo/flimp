@@ -161,11 +161,11 @@ def validate_dict(template, to_be_checked, parent, error_log, warning_log):
     will be logged.
     """
     for k in to_be_checked:
-        if not k in template:
+        if not k.strip() in template:
             warning_log.append("Extra field %r in record %r"
                               % (k, parent))
     for k in template:
-        if not k in to_be_checked:
+        if not k.strip() in to_be_checked:
             error_log.append("Missing field %r in record %r"
                               % (k, parent))
     for key, val in template.iteritems():
@@ -209,10 +209,10 @@ def generate(parent, child_name, template, description, name, tags):
         if isinstance(value, dict):
             # ok... we have another dict, so we're doing depth first traversal
             # and jump right in
-            generate(ns, key, value, description, name, tags)
+            generate(ns, key.strip(), value, description, name, tags)
         else:
             # it must be a tag so create the tag within the current namespace
-            tag = make_tag(ns, key, description, False)
+            tag = make_tag(ns, key.strip(), description, False)
             # Create the tag_value instance...
             # Lets make sure we specify the right sort of mime
             defaultType = None
@@ -221,9 +221,7 @@ def generate(parent, child_name, template, description, name, tags):
                 defaultType = 'application/json'
                 logger.info("Found list that's not all strings, setting JSON tag value "
                             "with MIME type %r" % defaultType)
-            # the attribute will be named after the tag's path with slash
-            # replaced by underscore. e.g. 'foo/bar' -> 'foo_bar'
-            attribute_name = tag.path#.replace('/', '_')
+            attribute_name = tag.path
             logger.info('Mapping tag: %r to attribute: %r' % (tag.path, attribute_name))
             tags[attribute_name] = tag_value(tag.path, defaultType)
 

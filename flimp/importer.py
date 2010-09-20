@@ -66,7 +66,7 @@ def execute():
                       " console")
     parser.add_option('-c', '--check', dest='check', default=False,
                       action="store_true", help="Validate the data file"\
-                      " containing the data to import into FluidDB -don't"\
+                      " containing the data to import into FluidDB - don't"\
                       " import anything")
     options, args = parser.parse_args()
 
@@ -97,28 +97,33 @@ def execute():
         ch.setFormatter(log_format)
         logger.addHandler(ch)
 
-    # In the same way that sphinx interrogates the user using q&a we need to
-    # assemble some more data that is probably not so easy to grab from the
-    # arguments of the command
-    username = get_argument('FluidDB username')
-    password = get_argument('FluidDB password', password=True)
-    root_path = get_argument('Absolute Namespace path (under which imported'\
-                             ' namespaces and tags will be created)')
-    if options.filename:
-        name = get_argument('Name of dataset (defaults to filename)',
-                        os.path.basename(options.filename).split('.')[0])
-        about = get_argument('Key field for about tag value (if none given,'\
-                             ' will use anonymous objects)', required=False)
+    if options.check:
+        # No need to get information from the user if we're just validating
+        # the file. A bit hacky!
+        username = password = root_path = name = desc = about = ""
     else:
-        name = get_argument('Name of dataset')
-    desc = get_argument('Description of the dataset')
+        # In the same way that sphinx interrogates the user using q&a we need to
+        # assemble some more data that is probably not so easy to grab from the
+        # arguments of the command
+        username = get_argument('FluidDB username')
+        password = get_argument('FluidDB password', password=True)
+        root_path = get_argument('Absolute Namespace path (under which imported'\
+                                 ' namespaces and tags will be created)')
+        if options.filename:
+            name = get_argument('Name of dataset (defaults to filename)',
+                            os.path.basename(options.filename).split('.')[0])
+            about = get_argument('Key field for about tag value (if none given,'\
+                                 ' will use anonymous objects)', required=False)
+        else:
+            name = get_argument('Name of dataset')
+        desc = get_argument('Description of the dataset')
 
-    # Dump the recently collected information into the log file
-    logger.info('FluidDB instance: %r' % options.instance)
-    logger.info('Username: %r' % username)
-    logger.info('Absolute Namespace path: %r' % root_path)
-    logger.info('Dataset name: %r' % name)
-    logger.info('Dataset description: %r' % desc)
+        # Dump the recently collected information into the log file
+        logger.info('FluidDB instance: %r' % options.instance)
+        logger.info('Username: %r' % username)
+        logger.info('Absolute Namespace path: %r' % root_path)
+        logger.info('Dataset name: %r' % name)
+        logger.info('Dataset description: %r' % desc)
 
     # Log into FluidDB
     fdb = Fluid(options.instance)

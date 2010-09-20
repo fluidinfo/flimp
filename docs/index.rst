@@ -74,7 +74,8 @@ Usage
                             The URI for the instance of FluidDB to use
       -l LOG, --log=LOG     The log file to write to (defaults to flimp.log)
       -v, --verbose         Display status messages to console
-
+      -c, --check           Validate the data file containing the data to import
+                            into FluidDB - don't import anything
 
 
     $ flimp -f data.json
