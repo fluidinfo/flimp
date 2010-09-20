@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Given a root directory will import the directories and files therin into
-FluidDB. Directories -> Namespaces, Files -> Tags, File-contents -> Tag values
-on a single object.
-
-Please feel free to adapt and change.
+Utility functions used by flimp.
 
 Copyright (c) 2010 Fluidinfo Inc.
 
