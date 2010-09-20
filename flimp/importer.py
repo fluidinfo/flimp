@@ -64,6 +64,10 @@ def execute():
     parser.add_option('-v', '--verbose', dest='verbose', default=False,
                       action="store_true", help="Display status messages to"\
                       " console")
+    parser.add_option('-c', '--check', dest='check', default=False,
+                      action="store_true", help="Validate the data file"\
+                      " containing the data to import into FluidDB -don't"\
+                      " import anything")
     options, args = parser.parse_args()
 
     # Some options validation
@@ -127,7 +131,7 @@ def execute():
             " log?)"
         if options.filename:
             process_file(options.filename, root_path, name, desc, about,
-                         options.preview)
+                         options.preview, options.check)
             print "Done"
         else:
             obj = process_directory(options.directory, root_path, username,
