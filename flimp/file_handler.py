@@ -84,6 +84,43 @@ def process(filename, root_path, name, desc, about, preview):
         logger.info('Starting to push records to FluidDB')
         push_to_fluiddb(raw_data, root_path, fom_class, about, name)
 
+def validate(raw_data):
+    """
+    Given the raw data as a list of dictionaries this function will check
+    each record to make sure it is valid. "Valid" in this case means that the
+    shape of each dictionary is the same - they have the same keys. If the
+    validator find "extra" keys it'll simply generate a warning.
+    """
+    # We use the first record as the template
+    default = raw_data[0]
+    # To store the results of the validation
+    error_log = []
+    warning_log = []
+    for record in raw_data[1:]:
+        validate_dict(default, record, record, error_log, warning_log)
+    # return the correct response
+    return error_log, warning_log
+
+def validate_dict(template, to_be_checked, parent, error_log, warning_log):
+    """
+    Given a dictionary as a template will check that the to_be_checked
+    dictionary contains the same keys. If extra keys are found only a warning
+    will be logged.
+    """
+    for k in to_be_checked:
+        if not k in template:
+            warning_log.append("Extra field %r in record %r"
+                              % (k, parent))
+    for k in template:
+        if not k in to_be_checked:
+            error_log.append("Missing field %r in record %r"
+                              % (k, parent))
+    for key, val in template.iteritems():
+        if isinstance(val, dict):
+            # check the inner dictionary
+            validate_dict(val, to_be_checked[key], parent, error_log, warning_log)
+
+
 def get_preview(raw_data, root_path):
     """
     Returns a list of the namespace/tag combinations that will be created
@@ -177,7 +214,7 @@ def generate(parent, child_name, template, description, name, tags):
                             "with MIME type %r" % defaultType)
             # the attribute will be named after the tag's path with slash
             # replaced by underscore. e.g. 'foo/bar' -> 'foo_bar'
-            attribute_name = tag.path.replace('/', '_')
+            attribute_name = tag.path#.replace('/', '_')
             logger.info('Mapping tag: %r to attribute: %r' % (tag.path, attribute_name))
             tags[attribute_name] = tag_value(tag.path, defaultType)
 
@@ -210,7 +247,7 @@ def push_to_fluiddb(raw_data, root_path, klass, about, name):
             obj.create()
         logger.info('Object %r successfully created' % obj.uid)
         # annotate it
-        tag_values = get_values(item, root_path.replace('/', '_') )
+        tag_values = get_values(item, root_path)
         for key, value in tag_values.iteritems():
             if key in klass.__dict__:
                 setattr(obj, key, value)
@@ -233,18 +270,7 @@ def get_values(item, parent):
     vals = {}
     for key, value in item.iteritems():
         if isinstance(value, dict):
-            # Why not:
-            # vals.update(get_values(value, '%s_%s' % (parent, key)))
-            vals.update(get_values(value, build_attribute_name([parent, key])))
+            vals.update(get_values(value, os.path.join(parent, key)))
         else:
-            # Why not:
-            # vals['%s_%s' % (parent, key)] = value
-            vals[build_attribute_name([parent, key])] = value
+            vals[os.path.join(parent, key)] = value
     return vals
-
-# This goes away if the 'why not?' above is followed.
-def build_attribute_name(items):
-    """
-    Turns a list into a something that will be a "valid" attribute name
-    """
-    return '_'.join([item for item in items if item])

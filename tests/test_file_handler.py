@@ -3,7 +3,7 @@ import unittest
 import uuid
 from flimp.file_handler import (clean_data, create_schema, generate,
                                  create_class, push_to_fluiddb, get_values,
-                                 build_attribute_name, get_preview)
+                                 get_preview, validate)
 from fom.session import Fluid
 from fom.mapping import Namespace, Object
 
@@ -55,6 +55,96 @@ class TestFileHandler(unittest.TestCase):
         # bad
         self.assertRaises(TypeError, clean_data, UNKNOWN_TYPE)
 
+    def test_validate(self):
+        # good
+        data = [
+            {
+                1: 'a',
+                2: {
+                    3: 'b'
+                },
+                4: 'c'
+            },
+            {
+                1: 'x',
+                2: {
+                    3: 'y'
+                },
+                4: 'z'
+            },
+        ]
+        errors, warnings = validate(data)
+        self.assertEqual([], errors) # no problem
+        self.assertEqual([], warnings) # no problem
+        # missing key
+        data = [
+            {
+                1: 'a',
+                2: {
+                    3: 'b'
+                },
+                4: 'c'
+            },
+            {
+                1: 'x',
+                2: {
+                    3: 'y'
+                },
+            },
+        ]
+        errors, warnings = validate(data)
+        self.assertEqual([], warnings) # no problem
+        self.assertEqual(1, len(errors))
+        self.assertEqual("Missing field 4 in record {1: 'x', 2: {3: "
+                         "'y'}}", errors[0])
+        # additional key
+        data = [
+            {
+                1: 'a',
+                2: {
+                    3: 'b'
+                },
+                4: 'c'
+            },
+            {
+                1: 'x',
+                2: {
+                    3: 'y',
+                },
+                4: 'z',
+                'foo': 'bar'
+            },
+        ]
+        errors, warnings = validate(data)
+        self.assertEqual([], errors) # no problem
+        self.assertEqual(1, len(warnings))
+        self.assertEqual("Extra field 'foo' in record {1: 'x', 2: {3:"
+                         " 'y'}, 'foo': 'bar', 4: 'z'}", warnings[0])
+        # check validation includes sub-dictionaries
+        data = [
+            {
+                1: 'a',
+                2: {
+                    3: 'b'
+                },
+                4: 'c'
+            },
+            {
+                1: 'x',
+                2: {
+                    'foo': 'bar'
+                },
+                4: 'z'
+            },
+        ]
+        errors, warnings = validate(data)
+        self.assertEqual(1, len(warnings))
+        self.assertEqual("Extra field 'foo' in record {1: 'x', 2: {'foo':"
+                         " 'bar'}, 4: 'z'}", warnings[0])
+        self.assertEqual(1, len(errors))
+        self.assertEqual("Missing field 3 in record {1: 'x', 2: {'foo': "
+                         "'bar'}, 4: 'z'}", errors[0])
+
     def test_create_schema(self):
         tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',
                              'flimp unit-test suite')
@@ -68,10 +158,10 @@ class TestFileHandler(unittest.TestCase):
         generate(root_namespace, name, template, 'flimp unit-test suite',
                  'flimp-test', tags)
         self.assertEqual(4, len(tags))
-        self.assertTrue('test_%s_foo' % name in tags)
-        self.assertTrue('test_%s_baz_qux' % name in tags)
-        self.assertTrue('test_%s_quux' % name in tags)
-        self.assertTrue('test_%s_corge' % name in tags)
+        self.assertTrue('test/%s/foo' % name in tags)
+        self.assertTrue('test/%s/baz/qux' % name in tags)
+        self.assertTrue('test/%s/quux' % name in tags)
+        self.assertTrue('test/%s/corge' % name in tags)
 
     def test_create_class(self):
         tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',
@@ -111,20 +201,17 @@ class TestFileHandler(unittest.TestCase):
 
     def test_get_values(self):
         item = TEMPLATE[0]
-        result = get_values(item, 'test_flimp_test')
+        result = get_values(item, 'test/flimp/test')
         self.assertEqual(4, len(result))
         # do we have the expected attribute names..?
-        self.assertTrue('test_flimp_test_foo' in result)
-        self.assertTrue('test_flimp_test_baz_qux' in result)
-        self.assertTrue('test_flimp_test_quux' in result)
-        self.assertTrue('test_flimp_test_corge' in result)
+        self.assertTrue('test/flimp/test/foo' in result)
+        self.assertTrue('test/flimp/test/baz/qux' in result)
+        self.assertTrue('test/flimp/test/quux' in result)
+        self.assertTrue('test/flimp/test/corge' in result)
         # and are the associated values correct..?
-        self.assertEqual(item['foo'], result['test_flimp_test_foo'])
+        self.assertEqual(item['foo'], result['test/flimp/test/foo'])
         self.assertEqual(item['baz']['qux'],
-                         result['test_flimp_test_baz_qux'])
-        self.assertEqual(item['quux'], result['test_flimp_test_quux'])
-        self.assertEqual(item['corge'], result['test_flimp_test_corge'])
+                         result['test/flimp/test/baz/qux'])
+        self.assertEqual(item['quux'], result['test/flimp/test/quux'])
+        self.assertEqual(item['corge'], result['test/flimp/test/corge'])
 
-    def test_build_attribute_name(self):
-        items = ['foo_bar', 'baz']
-        self.assertEqual('foo_bar_baz', build_attribute_name(items))

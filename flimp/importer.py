@@ -110,11 +110,11 @@ def execute():
     desc = get_argument('Description of the dataset')
 
     # Dump the recently collected information into the log file
-    logger.info('FluidDB instance: %s' % options.instance)
-    logger.info('Username: %s' % username)
-    logger.info('Absolute Namespace path: %s' % root_path)
-    logger.info('Dataset name: %s' % name)
-    logger.info('Dataset description: %s' % desc)
+    logger.info('FluidDB instance: %r' % options.instance)
+    logger.info('Username: %r' % username)
+    logger.info('Absolute Namespace path: %r' % root_path)
+    logger.info('Dataset name: %r' % name)
+    logger.info('Dataset description: %r' % desc)
 
     # Log into FluidDB
     fdb = Fluid(options.instance)
@@ -126,8 +126,8 @@ def execute():
         print "Working... (this might take some time, why not: tail -f the"\
             " log?)"
         if options.filename:
-            process_file(options.filename, root_path, username, name, desc,
-                         about, options.preview)
+            process_file(options.filename, root_path, name, desc, about,
+                         options.preview)
             print "Done"
         else:
             obj = process_directory(options.directory, root_path, username,
