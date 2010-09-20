@@ -93,9 +93,9 @@ class TestUtils(unittest.TestCase):
                 'bof': 'z'
             },
         ]
-        errors, warnings = validate(data)
-        self.assertEqual([], errors) # no problem
-        self.assertEqual([], warnings) # no problem
+        missing, extras = validate(data)
+        self.assertEqual([], missing) # no problem
+        self.assertEqual([], extras) # no problem
         # missing key
         data = [
             {
@@ -112,10 +112,10 @@ class TestUtils(unittest.TestCase):
                 },
             },
         ]
-        errors, warnings = validate(data)
-        self.assertEqual([], warnings) # no problem
-        self.assertEqual(1, len(errors))
-        self.assertTrue("Missing field 'bof'" in errors[0])
+        missing, extras = validate(data)
+        self.assertEqual([], extras) # no problem
+        self.assertEqual(1, len(missing))
+        self.assertTrue("Field 'bof'" in missing[0])
         # additional key
         data = [
             {
@@ -134,10 +134,10 @@ class TestUtils(unittest.TestCase):
                 'qux': 'quux'
             },
         ]
-        errors, warnings = validate(data)
-        self.assertEqual([], errors) # no problem
-        self.assertEqual(1, len(warnings))
-        self.assertTrue("Extra field 'qux' in record" in warnings[0])
+        missing, extras = validate(data)
+        self.assertEqual([], missing) # no problem
+        self.assertEqual(1, len(extras))
+        self.assertTrue("Field 'qux' in record" in extras[0])
         # check validation includes sub-dictionaries
         data = [
             {
@@ -155,11 +155,11 @@ class TestUtils(unittest.TestCase):
                 'bof': 'z'
             },
         ]
-        errors, warnings = validate(data)
-        self.assertEqual(1, len(warnings))
-        self.assertTrue("Extra field 'quux' in record" in  warnings[0])
-        self.assertEqual(1, len(errors))
-        self.assertTrue("Missing field 'baz' in record" in errors[0])
+        missing, extras = validate(data)
+        self.assertEqual(1, len(extras))
+        self.assertTrue("Field 'quux' in record" in  extras[0])
+        self.assertEqual(1, len(missing))
+        self.assertTrue("Field 'baz' in record" in missing[0])
 
     def test_create_schema(self):
         tags = create_schema(TEMPLATE, 'test/this/is/a/test', 'flimp-test',

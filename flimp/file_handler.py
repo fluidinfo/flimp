@@ -31,7 +31,7 @@ if sys.version_info < (2, 6):
     import simplejson as json
 else:
     import json
-from flimp.utils import process_data_dictionary, validate
+from flimp.utils import process_data_list, validate
 from flimp.parser import parse_json, parse_yaml, parse_csv
 
 VALID_FILETYPES = {
@@ -87,7 +87,7 @@ def process(filename, root_path, name, desc, about, preview=False,
             logger.info(result)
             print result
     else:
-        process_data_dictionary(raw_data, root_path, name, desc, about)
+        process_data_list(raw_data, root_path, name, desc, about)
 
 def get_preview(raw_data, root_path):
     """

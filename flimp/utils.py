@@ -113,7 +113,7 @@ def make_namespace_path(path, name, desc):
         checked_namespaces = ns.path
     return ns
 
-def process_data_dictionary(raw_data, root_path, name, desc, about):
+def process_data_list(raw_data, root_path, name, desc, about):
     """
     Given a raw-data list of dictionaries that represent objects to be tagged
     in FluidDB this function will create the required tags and namespaces,
@@ -139,37 +139,37 @@ def validate(raw_data):
     """
     Given the raw data as a list of dictionaries this function will check
     each record to make sure it is valid. "Valid" in this case means that the
-    shape of each dictionary is the same - they have the same keys. If the
-    validator find "extra" keys it'll simply generate a warning.
+    shape of each dictionary is the same - they have the same keys.
+
+    Returns lists indicating location of missing and extra fields.
     """
     # We use the first record as the template
     default = raw_data[0]
     # To store the results of the validation
-    error_log = []
-    warning_log = []
+    missing_log = []
+    extras_log = []
     for record in raw_data[1:]:
-        validate_dict(default, record, record, error_log, warning_log)
+        validate_dict(default, record, record, missing_log, extras_log)
     # return the correct response
-    return error_log, warning_log
+    return missing_log, extras_log
 
-def validate_dict(template, to_be_checked, parent, error_log, warning_log):
+def validate_dict(template, to_be_checked, parent, missing_log, extras_log):
     """
     Given a dictionary as a template will check that the to_be_checked
-    dictionary contains the same keys. If extra keys are found only a warning
-    will be logged.
+    dictionary.
     """
     for k in to_be_checked:
         k = k.strip()
         if not k in template:
-            warning_log.append("Extra field %r in record %r" % (k, parent))
+            extras_log.append("Field %r in record %r" % (k, parent))
     for k in template:
         k = k.strip()
         if not k in to_be_checked:
-            error_log.append("Missing field %r in record %r" % (k, parent))
+            missing_log.append("Field %r in record %r" % (k, parent))
     for key, val in template.iteritems():
         if isinstance(val, dict):
             # check the inner dictionary
-            validate_dict(val, to_be_checked[key], parent, error_log, warning_log)
+            validate_dict(val, to_be_checked[key], parent, missing_log, extras_log)
 
 def create_schema(raw_data, root_path, name, desc):
     """

@@ -147,6 +147,13 @@ like this:
 .. include:: ../examples/directory_import.py
     :literal:
 
+Finally, if you're working in Python and already have a list of dictionary 
+objects it's possible to call some of the utility functions the above two
+examples rely upon:
+
+.. include:: ../examples/import_utils.py
+    :literal:
+
 The source code is extensively commented and well covered by unit tests.
 Please feel free to report bugs, patches and request features.
 
