@@ -8,7 +8,7 @@ class NullHandler(logging.Handler):
 h = NullHandler()
 logging.getLogger("flimp").addHandler(h)
 
-VERSION = "0.6"
+VERSION = "0.6.1"
 
 NAMESPACE_DESC = "%s namespace derived from %s.\n\n%s"
 TAG_DESC = "%s tag derived from %s.\n\n%s"
