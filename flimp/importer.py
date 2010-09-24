@@ -139,12 +139,13 @@ def execute():
                          options.preview, options.check)
             print "Done"
         else:
-            obj = process_directory(options.directory, root_path, username,
+            obj = process_directory(options.directory, root_path,
                                     name, desc, options.uuid, options.about,
                                     options.preview)
-            msg = 'Tags added to object with uuid: %s' % obj.uid
-            logger.info(msg)
-            print msg
+            if obj:
+                msg = 'Tags added to object with uuid: %s' % obj.uid
+                logger.info(msg)
+                print msg
     except Exception, e:
         # We want to catch all exceptions so we can log them nicely
         ex_type, ex_val, ex_trace = sys.exc_info()

@@ -95,23 +95,25 @@ def get_preview(directory, fluiddb_path):
     # path that _might_ be in front of it
     tag_paths = list()
     for path, children, files in os.walk(directory):
-        # Not very pretty but it works...
-        if not path.startswith('.'): # ignore hidden directories
-            for f in files:
-                if not f.startswith('.'): # ignore hidden files
-                    relative_path = path.replace(directory, '')
-                    if relative_path:
-                        # build the full path remembering to knock off the
-                        # slash from the relative path
-                        tag_path = '/'.join([fluiddb_path,
-                                             relative_path[1:], f])
-                    else:
-                        tag_path = '/'.join([fluiddb_path, f])
-                    content_type, encoding = guess_type(os.path.join(path,f))
-                    if not content_type:
-                        content_type = 'UNKNOWN'
-                    tag_paths.append('%s CONTENT-TYPE: %s' % (tag_path,
-                                                              content_type))
+        # Not very pretty but it works... (ignores hidden directories)
+        for child in children:
+            if os.path.basename(child).startswith('.'):
+                children.remove(child)
+        for f in files:
+            if not f.startswith('.'): # ignore hidden files
+                relative_path = path.replace(directory, '')
+                if relative_path:
+                    # build the full path remembering to knock off the
+                    # slash from the relative path
+                    tag_path = '/'.join([fluiddb_path,
+                                         relative_path[1:], f])
+                else:
+                    tag_path = '/'.join([fluiddb_path, f])
+                content_type, encoding = guess_type(os.path.join(path,f))
+                if not content_type:
+                    content_type = 'UNKNOWN'
+                tag_paths.append('%s CONTENT-TYPE: %s' % (tag_path,
+                                                          content_type))
     return tag_paths
 
 def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
@@ -145,34 +147,36 @@ def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
     # iterate over the filesystem creating the namespaces and tags (where
     # appropriate) and adding the tag value to the object
     for path, children, files in os.walk(directory):
-        # still not pretty
-        if not path.startswith('.'): # ignore hidden directories
-            # create/check the namespace from the directory
-            new_ns_name = path.replace(directory, '')
-            if new_ns_name:
-                # join the paths whilst remember to knock off the leading
-                # slash from the new_ns_name
-                ns_path = '/'.join([root_namespace.path, new_ns_name[1:]])
-                new_ns = make_namespace(ns_path, name, desc)
-            else:
-                new_ns = root_namespace
-            for f in files:
-                if not f.startswith('.'): # ignore hidden files
-                    # create/check the tag from the filename
-                    # TODO: tag_path is not used.
-                    tag_path = os.path.join(new_ns.path, f)
-                    new_tag = make_tag(new_ns, f, name, desc, False)
-                    file_path = os.path.join(path, f)
-                    logger.info('Preparing file %r for upload' % file_path)
-                    content_type, encoding = guess_type(file_path)
-                    logger.info('Content-Type of %r detected' % content_type)
-                    # now attach it to the object
-                    raw_file = open(file_path, 'r')
-                    logger.info('Pushing file %r to object %r on tag %r' %
-                                (file_path, obj.uid, new_tag.path))
-                    obj.set(new_tag.path, raw_file.read(), content_type)
-                    logger.info('DONE!')
-                    raw_file.close()
+        # still not pretty (ignoring hidden directories)
+        for child in children:
+            if os.path.basename(child).startswith('.'):
+                children.remove(child)
+        # create/check the namespace from the directory
+        new_ns_name = path.replace(directory, '')
+        if new_ns_name:
+            # join the paths whilst remember to knock off the leading
+            # slash from the new_ns_name
+            ns_path = '/'.join([root_namespace.path, new_ns_name[1:]])
+            new_ns = make_namespace(ns_path, name, desc)
+        else:
+            new_ns = root_namespace
+        for f in files:
+            if not f.startswith('.'): # ignore hidden files
+                # create/check the tag from the filename
+                # TODO: tag_path is not used.
+                tag_path = os.path.join(new_ns.path, f)
+                new_tag = make_tag(new_ns, f, name, desc, False)
+                file_path = os.path.join(path, f)
+                logger.info('Preparing file %r for upload' % file_path)
+                content_type, encoding = guess_type(file_path)
+                logger.info('Content-Type of %r detected' % content_type)
+                # now attach it to the object
+                raw_file = open(file_path, 'r')
+                logger.info('Pushing file %r to object %r on tag %r' %
+                            (file_path, obj.uid, new_tag.path))
+                obj.set(new_tag.path, raw_file.read(), content_type)
+                logger.info('DONE!')
+                raw_file.close()
     logger.info('Finished tagging the object with the uuid %r' % obj.uid)
     return obj
 
