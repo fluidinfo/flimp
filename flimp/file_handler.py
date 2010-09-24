@@ -43,7 +43,7 @@ VALID_FILETYPES = {
 logger = logging.getLogger("flimp")
 
 def process(filename, root_path, name, desc, about, preview=False,
-            check=False):
+            check=False, allowEmpty=True):
     """
     The recipe for grabbing the file and pushing it to FluidDB
     """
@@ -87,7 +87,7 @@ def process(filename, root_path, name, desc, about, preview=False,
             logger.info(result)
             print result
     else:
-        process_data_list(raw_data, root_path, name, desc, about)
+        process_data_list(raw_data, root_path, name, desc, about, allowEmpty)
 
 def get_preview(raw_data, root_path):
     """

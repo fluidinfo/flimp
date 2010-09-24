@@ -42,9 +42,19 @@ class TestParseCsv(unittest.TestCase):
         self.assertEqual(3, len(result))
         self.assertTrue(isinstance(result[0], dict))
         self.assertEqual(3, len(result[0].keys()))
-        self.assertRaises(ValueError, parse_json.parse, bad)
-        self.assertRaises(ValueError, parse_json.parse, header)
-        self.assertRaises(ValueError, parse_json.parse, empty)
+        self.assertRaises(ValueError, parse_csv.parse, header)
+        self.assertRaises(Exception, parse_csv.parse, empty)
+
+        # Just confirm that zip is producing the appropriately sized
+        # dictionaries
+        result = parse_csv.parse(bad)
+        for item in result[:-1]:
+            self.assertEqual(3, len(item))
+        self.assertEqual(2, len(result[3]))
+
+    def test_clean_header(self):
+        header = "  THIS IS A TEST   "
+        self.assertEqual("this_is_a_test", parse_csv.clean_header(header))
 
 class TestParseYaml(unittest.TestCase):
 

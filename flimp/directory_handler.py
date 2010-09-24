@@ -163,8 +163,6 @@ def push_to_fluiddb(directory, fluiddb_path, name, desc, uuid=None,
         for f in files:
             if not f.startswith('.'): # ignore hidden files
                 # create/check the tag from the filename
-                # TODO: tag_path is not used.
-                tag_path = os.path.join(new_ns.path, f)
                 new_tag = make_tag(new_ns, f, name, desc, False)
                 file_path = os.path.join(path, f)
                 logger.info('Preparing file %r for upload' % file_path)

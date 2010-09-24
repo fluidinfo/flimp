@@ -109,7 +109,7 @@ def make_namespace_path(path, name, desc):
         checked_namespaces = ns.path
     return ns
 
-def process_data_list(raw_data, root_path, name, desc, about):
+def process_data_list(raw_data, root_path, name, desc, about, allowEmpty=True):
     """
     Given a raw-data list of dictionaries that represent objects to be tagged
     in FluidDB this function will create the required tags and namespaces,
@@ -129,7 +129,7 @@ def process_data_list(raw_data, root_path, name, desc, about):
 
     # Given the newly existing class push all the data to FluidDB
     logger.info('Starting to push records to FluidDB')
-    push_to_fluiddb(raw_data, root_path, fom_class, about, name)
+    push_to_fluiddb(raw_data, root_path, fom_class, about, name, allowEmpty)
 
 def validate(raw_data):
     """
@@ -228,7 +228,7 @@ def create_class(tags):
     """
     return type('fom_class', (Object, ), tags)
 
-def push_to_fluiddb(raw_data, root_path, klass, about, name):
+def push_to_fluiddb(raw_data, root_path, klass, about, name, allowEmpty=True):
     """
     Given the raw data and a class derived from FOM's Object class will import
     the data into FluidDB. Each item in the list mapping to a new object in
@@ -253,8 +253,12 @@ def push_to_fluiddb(raw_data, root_path, klass, about, name):
         tag_values = get_values(item, root_path)
         for key, value in tag_values.iteritems():
             if key in klass.__dict__:
-                setattr(obj, key, value)
-                logger.info('Set: %r to: %r' % (key, value))
+                # check if we're allowed to set empty values
+                if allowEmpty or (Value is None or Value == ''):
+                    setattr(obj, key, value)
+                    logger.info('Set: %r to: %r' % (key, value))
+                else:
+                    logger.info('%r ignored because it was empty' % key)
             else:
                 logger.error('Unable to set %r (unknown attribute)' % key)
         if about:
