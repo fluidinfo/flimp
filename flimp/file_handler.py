@@ -50,10 +50,11 @@ def process(filename, root_path, name, desc, about, preview=False,
     # Turn the raw input file into a list data structure containing the items
     # to import into FluidDB
     raw_data = clean_data(filename)
+    number_of_records = len(raw_data)
     logger.info('Raw filename: %r' % filename)
     logger.info('Root namespace path: %r' % root_path)
     logger.info('About tag field key: %r' % about)
-    logger.info('%d records found' % len(raw_data))
+    logger.info('%d records found' % number_of_records) 
 
     if preview or check:
         if preview:
@@ -64,10 +65,10 @@ def process(filename, root_path, name, desc, about, preview=False,
             output.append("The following namespaces/tags will be generated.\n")
             output.extend(get_preview(raw_data, root_path))
             output.append("\n%d records will be imported into FluidDB\n" %
-                          len(raw_data))
+                          number_of_records)
             result = "\n".join(output)
             logger.info(result)
-            print result
+            return result
         else:
             # check the file and display the results
             logger.info('Validating %r\n' % filename)
@@ -85,9 +86,10 @@ def process(filename, root_path, name, desc, about, preview=False,
             else:
                 result = "Validation passed ok"
             logger.info(result)
-            print result
+            return result
     else:
         process_data_list(raw_data, root_path, name, desc, about, allowEmpty)
+        return "Processed %d records" % number_of_records
 
 def get_preview(raw_data, root_path):
     """

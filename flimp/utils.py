@@ -252,21 +252,25 @@ def push_to_fluiddb(raw_data, root_path, klass, about, name, allowEmpty=True):
         # annotate it
         tag_values = get_values(item, root_path)
         for key, value in tag_values.iteritems():
-            if key in klass.__dict__:
-                # check if we're allowed to set empty values
-                if allowEmpty or (Value is None or Value == ''):
-                    setattr(obj, key, value)
-                    logger.info('Set: %r to: %r' % (key, value))
-                else:
-                    logger.info('%r ignored because it was empty' % key)
-            else:
-                logger.error('Unable to set %r (unknown attribute)' % key)
+            set_tag_value(klass, obj, key, value, allowEmpty)
         if about:
             logger.info('Finished annotating Object about %r with id: %r' %
                          (about_value, obj.uid))
         else:
             logger.info('Finished annotating anonymous Object with id: %r' %
                          obj.uid)
+
+def set_tag_value(klass, obj, key, value, allowEmpty):
+    if key in klass.__dict__:
+        # check if we're allowed to set empty values
+        if allowEmpty or not value is None:
+            setattr(obj, key, value)
+            logger.info('Set: %r to: %r' % (key, value))
+        else:
+            logger.info('%r ignored because it was empty' % key)
+    else:
+        # ToDo: Do we want to handle unknown tag values..?
+        logger.error('Unable to set %r (unknown attribute)' % key)
 
 def get_values(item, parent):
     """

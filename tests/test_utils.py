@@ -3,10 +3,10 @@ import uuid
 
 from fom.session import Fluid
 from fom.mapping import Namespace, Object
-from flimp.utils import (create_schema, generate,
-                                 create_class, push_to_fluiddb, get_values,
-                                 validate, make_namespace, make_tag,
-                                make_namespace_path)
+from flimp.utils import (create_schema, generate, create_class,
+                         push_to_fluiddb, get_values, validate,
+                         make_namespace, make_tag, make_namespace_path,
+                         set_tag_value, process_data_list)
 
 # good data structure
 TEMPLATE = [
@@ -74,6 +74,36 @@ class TestUtils(unittest.TestCase):
         result.delete()
         ns = Namespace("test/%s" % unique_ns)
         ns.delete()
+
+    def test_process_data_list(self):
+        # setup
+        raw_data = [
+            {
+                'foo': 'a',
+                'bar': {
+                    'baz': 'b'
+                },
+                'bof': 'c'
+            },
+            {
+                'foo': 'x',
+                'bar': {
+                    'baz': 'y'
+                },
+                'bof': None
+            },
+        ]
+        name = str(uuid.uuid4())
+        root_path = 'test/%s' % name
+        desc = 'flimp unit-test suite'
+        about = None
+        allowEmpty = True
+        process_data_list(raw_data, root_path, name, desc, about, allowEmpty)
+        # check we have two objects each with three tags attached
+        result = Object.filter('has %s/foo' % root_path)
+        self.assertEqual(2, len(result))
+        for obj in result:
+            self.assertEqual(3, len(obj.tag_paths))
 
     def test_validate(self):
         # good
@@ -189,7 +219,7 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(k in attributes)
 
     def test_push_to_fluiddb(self):
-        # setting stuff up...
+        # set stuff up...
         name = str(uuid.uuid4())
         root_path = 'test/%s' % name
         tags = create_schema(TEMPLATE, root_path, 'flimp_test',
@@ -212,8 +242,72 @@ class TestUtils(unittest.TestCase):
         for obj in result:
             tag_paths = obj.tag_paths
             for k in tags:
-                tag_name = k.replace('_', '/')
-                self.assertTrue(tag_name in tag_paths)
+                self.assertTrue(k in tag_paths)
+        # ok... lets make sure that the allowEmpty flag is handled properly
+        template = [
+            {
+                'foo-x': None,
+                'bar-x': {
+                    'baz-x': ''
+                },
+                'bof-x': 'Hello',
+                'qux-x': False
+            },
+        ]
+        tags = create_schema(template, root_path, 'flimp_test',
+                             'flimp unit-test suite')
+        self.assertEqual(4, len(tags))
+        fom_class = create_class(tags)
+        push_to_fluiddb(template, root_path, fom_class, None, 'flimp_test',
+                        allowEmpty=False)
+        # check an object was created
+        result = Object.filter("has %s/bof-x" % root_path)
+        self.assertEqual(1, len(result))
+        tag_paths = result[0].tag_paths
+        self.assertEqual(3, len(tag_paths))
+
+    def test_set_tag_value(self):
+        # set stuff up...
+        name = str(uuid.uuid4())
+        root_path = 'test/%s' % name
+        template = [
+            {
+                'foo': None,
+                'bar': {
+                    'baz': ''
+                },
+                'bof': 'Hello',
+                'qux': False
+            },
+        ]
+        tags = create_schema(template, root_path, 'flimp_test',
+                             'flimp unit-test suite')
+        self.assertEqual(4, len(tags))
+        fom_class = create_class(tags)
+        test_item = template[0]
+        tag_values = get_values(test_item, root_path)
+        # Empty tags allowed
+        allowEmpty = True
+        obj = fom_class()
+        obj.create()
+        for key, value in tag_values.iteritems():
+             set_tag_value(fom_class, obj, key, value, allowEmpty)
+        self.assertEqual(None, getattr(obj, 'test/%s/foo' % name))
+        self.assertEqual('', getattr(obj, 'test/%s/bar/baz' % name))
+        self.assertEqual('Hello', getattr(obj, 'test/%s/bof' % name))
+        self.assertEqual(False, getattr(obj, 'test/%s/qux' % name))
+        # Empty tags are *not* allowed
+        allowEmpty = False
+        obj = fom_class()
+        obj.create()
+        for key, value in tag_values.iteritems():
+             set_tag_value(fom_class, obj, key, value, allowEmpty)
+        tags = obj.tags
+        self.assertEqual(3, len(tags))
+        # tag values have been set except for the one that was None
+        self.assertEqual('', getattr(obj, 'test/%s/bar/baz' % name))
+        self.assertEqual('Hello', getattr(obj, 'test/%s/bof' % name))
+        self.assertEqual(False, getattr(obj, 'test/%s/qux' % name))
 
     def test_get_values(self):
         item = TEMPLATE[0]

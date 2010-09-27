@@ -135,9 +135,10 @@ def execute():
         print "Working... (this might take some time, why not: tail -f the"\
             " log?)"
         if options.filename:
-            process_file(options.filename, root_path, name, desc, about,
+            msg = process_file(options.filename, root_path, name, desc, about,
                          options.preview, options.check)
-            print "Done"
+            logger.info(msg)
+            print msg
         else:
             obj = process_directory(options.directory, root_path,
                                     name, desc, options.uuid, options.about,

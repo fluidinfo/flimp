@@ -1,5 +1,6 @@
 import os
 import unittest
+from types import NoneType
 from flimp.parser import parse_json, parse_csv, parse_yaml
 
 PATH_TO_FILES = os.path.join(os.getcwd(), os.path.dirname(__file__))
@@ -13,6 +14,7 @@ GOOD_CSV = os.path.join(PATH_TO_FILES, 'good.csv')
 BAD_CSV = os.path.join(PATH_TO_FILES, 'bad.csv')
 HEADER_ONLY_CSV = os.path.join(PATH_TO_FILES, 'header_only.csv')
 EMPTY_CSV = os.path.join(PATH_TO_FILES, 'empty.csv')
+BLANK_CSV = os.path.join(PATH_TO_FILES, 'blank.csv')
 # YAML files
 GOOD_YAML = os.path.join(PATH_TO_FILES, 'good.yaml')
 BAD_YAML = os.path.join(PATH_TO_FILES, 'bad.yaml')
@@ -36,12 +38,13 @@ class TestParseCsv(unittest.TestCase):
         bad = open(BAD_CSV, 'r')
         header = open(HEADER_ONLY_CSV, 'r')
         empty = open(EMPTY_CSV, 'r')
+        blank = open(BLANK_CSV, 'r')
 
         result = parse_csv.parse(good)
         self.assertTrue(isinstance(result, list))
         self.assertEqual(3, len(result))
         self.assertTrue(isinstance(result[0], dict))
-        self.assertEqual(3, len(result[0].keys()))
+        self.assertEqual(3, len(result[0]))
         self.assertRaises(ValueError, parse_csv.parse, header)
         self.assertRaises(Exception, parse_csv.parse, empty)
 
@@ -52,9 +55,32 @@ class TestParseCsv(unittest.TestCase):
             self.assertEqual(3, len(item))
         self.assertEqual(2, len(result[3]))
 
+        # Lets make sure it appropriately handles CSV's with blank values
+        result = parse_csv.parse(blank)
+        self.assertEqual(3, len(result))
+        for item in result:
+            self.assertEqual(3, len(item))
+
     def test_clean_header(self):
         header = "  THIS IS A TEST   "
         self.assertEqual("this_is_a_test", parse_csv.clean_header(header))
+
+    def test_clean_row_item(self):
+        test_items = {
+            "test string": str,
+            u"test unicode": unicode,
+            "1": int,
+            " 1 ": int,
+            "1.2": float,
+            " 1.2 ": float,
+            "True": bool,
+            "False": bool,
+            "true": bool,
+            "false": bool,
+            "": NoneType,
+        }
+        for key, value in test_items.iteritems():
+            self.assertTrue(isinstance(parse_csv.clean_row_item(key), value))
 
 class TestParseYaml(unittest.TestCase):
 
