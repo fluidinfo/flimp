@@ -1,5 +1,5 @@
 import logging
-from flimp.file_handler import process
+from flimp.file_handler import process, clean_data
 from fom.session import Fluid
 
 # optionally create a logger - you don't need to do this but it's good to be
@@ -28,5 +28,11 @@ desc = 'Plain English dataset description' # exactly what it says
 about = 'id' # field whose value to use for the about tag
 preview = False # True will cause flimp to print out the preview
 
-# Make magic happen...
+# A basic example
 process(filename, root_path, name, desc, about, preview)
+
+# If you only want to get the data structure from the file try this.
+data = clean_data(filename)
+
+# The variable "data" now contains a list of dictionaries where each
+# dictionary defines the tags to be added to an individual object.
